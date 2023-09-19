@@ -11,9 +11,6 @@ pdf-engine: pdflatex  # You may need to remove this line
 
 
 
-
-
-
 Solution:
 ```{r}
 
