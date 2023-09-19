@@ -1,0 +1,170 @@
+---
+title: 'Assignment 3 STAT 405'
+format:
+  pdf: default
+pdf-engine: pdflatex  # You may need to remove this line
+---
+
+* Please produce your assignment as a pdf (knit to pdf).
+See instructions in announcements if you have not downloaded a LaTeX distributor.
+
+
+* Please also submit your
+qmd file (it will not be graded but we want it for reference
+purposes).
+* Please use the provided qmd file as a basis for your first assignment
+(do not submit an R script file), putting your solutions
+inside the empty blocks that follow "Solution:"
+* You will have to produce your future qmd files.
+* 20 points per exercise
+
+<br />
+
+
+
+
+#### Exercise 1:
+Using paste (or paste0), create the following Latex formula: a_{1}X_{1}ˆ0 + a_{2}X_{2}ˆ1+ a_{3}X_{3}ˆ2 + a_{4}X_{4}ˆ3 + a_{5}X_{5}ˆ4
+
+Solution:
+```{r}
+paste0("a_{",1:5,"}X_{",1:5,"}^",0:4, collapse = "+")
+```
+
+<br />
+
+#### Exercise 2:
+A bucket contains 12 rocks: five yellow rocks and seven black rocks. If we select three rocks at random, what is the probability that exactly one yellow rock gets selected? 
+```{r}
+#1. (9 points) using a for loop with an if() clause and accumulator (Hint: The strategy is to sample 3 rocks without replacement from sample_space
+sample_space <- c(rep("Yellow", 5), rep("Blue", 7))
+n <- 10000
+set.seed(123)
+accumulator <- 0
+for(i in 1:n){
+  curr_sample <- sample(sample_space, 3)
+  if( "Yellow" %in% curr_sample && table(curr_sample)[["Yellow"]] == 1 )
+    accumulator <- accumulator +1
+}
+accumulator/n
+
+#2 (8 points) using a for loop with an ifelse() function and accumulator
+set.seed(123)
+accumulator <- 0
+for(i in 1:n){
+  curr_sample <- sample(sample_space, 3)
+  ifelse( "Yellow" %in% curr_sample && table(curr_sample)[["Yellow"]] == 1,  accumulator <- accumulator +1, next)
+}
+accumulator/n
+
+#3. (8 points) Vectorial approach using sapply (no loops, no if() or ifelse(), no accumulator).
+set.seed(123)
+simulated_results <- sapply(1:n, function(x) {
+  curr_sample <- sample(sample_space, 3)
+  num_yellow_selected <- sum(curr_sample == "Yellow")
+  return(num_yellow_selected)
+})
+
+simulated_probability <- sum(simulated_results == 1) / n
+simulated_probability
+```
+
+<br />
+
+#### Exercise 3:
+1. (12.5 points) In the previous exercise, what is the probability that at most one yellow rock gets selected?
+2. (12.5 points) In the previous exercise, what is the probability that at least one yellow rock gets selected?
+
+Solution:
+```{r}
+#1
+set.seed(123)
+simulated_results <- sapply(1:n, function(x) {
+  curr_sample <- sample(sample_space, 3)
+  num_yellow_selected <- sum(curr_sample == "Yellow")
+  return(num_yellow_selected)
+})
+
+simulated_probability <- sum(simulated_results == 1 | simulated_results == 0) / n
+simulated_probability
+
+#2
+
+set.seed(123)
+simulated_results <- sapply(1:n, function(x) {
+  curr_sample <- sample(sample_space, 3)
+  num_yellow_selected <- sum(curr_sample == "Yellow")
+  return(num_yellow_selected)
+})
+
+simulated_probability <- sum(simulated_results == 1 | simulated_results == 2 | simulated_results == 3) / n
+simulated_probability
+
+```
+#### Exercise 4:
+
+1. (9 points) Suppose you take $1000 to the casino and you play roulette. Every turn, you decide to bet 100 dollars on black. If you win, which occurs with probability 9/19, you win 200, which is a net profit of 100. If you lose, you get nothing. Using a while loop, write code to simulate your adventure until you lose all your money. How many rounds will it take?
+2. (8 points) Now, repeat the above simulation 1,000 times. What is the average number of times you get to play for each $1000 bankroll you use? Plot a histogram of the number of times you get to play for each bankroll. Comment a sentence on the histogram
+3. (8 points) Suppose you quit if you double your money. Estimate the probability you double your money by running the simulation 1,000 times.
+```{r}
+#1
+set.seed(123)
+play_roulette <- function(x) {
+money <- 1000
+rounds <- 0
+outcomes <- c("win", "lose")
+  while(money >0){
+  rounds<- rounds + 1
+  money <- money - 100
+  play_outcome<- sample(outcomes, size = 1, prob=c(9/19, 10/19))
+  if(play_outcome == "win"){
+    money <- money + 200
+    }
+  }
+return(rounds)
+}
+
+print(play_roulette())
+#2
+set.seed(123)
+num_sim <- 1000
+roulette_sim <- sapply(1:num_sim, play_roulette)
+mean(roulette_sim)
+hist(roulette_sim, main = "Histogram of Roulette Simulation", xlab = "Rounds")
+
+#This histogram shows that most rounds will be in the lower range of possible 
+#rounds/is right skewed.Very unlikely to play a lot of rounds.
+
+#3
+set.seed(123)
+play_double_or_nothing_roulette <- function(x) {
+money <- 1000
+rounds <- 0
+outcomes <- c("win", "lose")
+  while(money >0 && money < 2000){
+    rounds<- rounds + 1
+    money <- money - 100
+    play_outcome<- sample(outcomes, size = 1, prob=c(9/19, 10/19))
+    if(play_outcome == "win"){
+      money <- money + 200
+    }
+  }
+  if(money>= 2000){
+    return(1)
+  }
+return(0)
+}
+num_sim <- 1000
+double_sim <- sapply(1:num_sim, play_double_or_nothing_roulette)
+#Probability of doubling your money
+sum(double_sim)/1000
+
+```
+
+```
+
+<br />
+
+
+
+
