@@ -1,5 +1,5 @@
 ---
-title: 'Assignment 3 STAT 405'
+title: 'STAT 405 Project'
 format:
   pdf: default
 pdf-engine: pdflatex  # You may need to remove this line
