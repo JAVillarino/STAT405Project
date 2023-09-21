@@ -9,15 +9,30 @@ pdf-engine: pdflatex  # You may need to remove this line
 
 <br />
 
-haejkalkendljaksndlajsndla
 
-Solution:
 ```{r}
+#install.packages("readr")
+library(readr)
+
+data_set <- read_csv("Hospital_Inpatient_Discharges__SPARCS_De-Identified___2013.csv",show_col_types = FALSE)
+
+cleaned_data <- na.omit(data_set)
 
 ```
 
 <br />
 
+```{r}
+cleaned_data
+
+
+y <- cleaned_data$`Total Charges`
+
+
+admission_freq <- table(cleaned_data$`Type of Admission`)
+admission_percentage <- 
+barplot(table(admission_percentage))
+```
 
 <br />
 
