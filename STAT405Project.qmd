@@ -2,7 +2,9 @@
 title: 'STAT 405 Project'
 format:
   pdf: default
+ 
 pdf-engine: pdflatex  # You may need to remove this line
+echo: false
 ---
 
 
@@ -23,15 +25,50 @@ cleaned_data <- na.omit(data_set)
 <br />
 
 ```{r}
-cleaned_data
-
-
 y <- cleaned_data$`Total Charges`
+```
 
 
+```{r}
+plot(length_of_stay, y,  xlab = "Length of Stay", main = "Price vs Length of Stay", ylab = "Price")
+
+lmfs <- lm(y ~ length_of_stay)
+abline(lmfs, col = "RED")
+```
+
+
+```{r}
+length_of_stay <- strtoi(cleaned_data$`Length of Stay`)
+boxplot(cleaned_data$'Total Costs', 
+        main="Box Plot of Total Costs",
+        ylab= "Total costs")
+```
+
+
+```{r}
+options(repr.plot.width = 100, repr.plot.height = 100)
+
+cleaned_data$`Payment Typology 1` <- as.factor(cleaned_data$`Payment Typology 1`)
+payments <- table(cleaned_data$`Payment Typology 1`)
+pie(payments, main = "Payment Type Distribution", col=rainbow(length(payments)), labels = NA)
+legend("left", legend = levels(cleaned_data$`Payment Typology 1`), fill = rainbow(length(payments)), cex = 0.7)
+```
+
+
+```{r}
 admission_freq <- table(cleaned_data$`Type of Admission`)
-admission_percentage <- 
-barplot(table(admission_percentage))
+
+
+barplot(admission_freq, xlab = "Type Of Admission", main = "Frequencies for Type of Admission", ylab = "Frequency")
+```
+```{r}
+medianCosts <- tapply(cleaned_data$`Total Costs`, cleaned_data$Race, median)
+barplot(medianCosts, main = "Median Cost by Race", xlab = "Race", ylab = "Median Cost", col = "purple", names.arg = sort(names(medianCosts)), ylim = c(0, max(medianCosts) * 1.5))
+```
+```{r}
+ageGroups <- table(cleaned_data$`Age Group`)
+barplot(ageGroups, main = "Age Group Distribution", xlab = "Age Group", 
+        ylab = "Frequency", col = "green", border = "black", ylim = c(0, 300000)) 
 ```
 
 <br />
