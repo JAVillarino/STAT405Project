@@ -1,13 +1,76 @@
 ---
-title: 'STAT 405 Project'
-format:
-  pdf: default
- 
-pdf-engine: pdflatex  # You may need to remove this line
-echo: false
+title: "Healthcare Insights and Sociodemographic Analysis of New York: A Comprehensive Analysis of Patient Records in 2013"
+format: pdf
+author: Abel Limachi, Austin Tran, Joel Villarino, and Krish Kumar (Group 3)
+editor: visual
 ---
+## 
 
+*(last updated 09/21/2023)*
 
+**Introduction:**
+
+In the context of the ever-evolving landscape of healthcare, our choice of dataset stems from the pressing need to delve into an in-depth analysis of the healthcare dynamics prevailing in today's society. New York, being one of the most densely populated states in the United States, presents a unique microcosm of diverse populations and a wide spectrum of urban and rural healthcare challenges. Motivated by the significance of understanding these complexities, our research group has selected a comprehensive dataset encompassing 2,428,905 patient records, representing healthcare interactions across various hospitals throughout New York in the year 2013.
+
+This rich dataset spans a spectrum of information, including patient demographics, detailed medical records, financial aspects related to their hospitalization, and critical contextual information pertinent to each patient's stay. This extensive dataset holds immense potential for generating compelling visualizations and conducting statistical analyses, offering valuable insights into the intricacies of the New York healthcare system while also providing broader insights that can contribute to the understanding of healthcare systems more generally.
+
+The following project contains different visualizations and statistics that will provide you more information on the different social and economic factors associated with patients in the state of New York in 2013.
+
+**Dataset:**
+
+2013 Hospital Inpatient Discharges in the State of New York 
+
+*The following data set was received from the official New York State Health website on heath.data.ny.gov*
+
+<https://health.data.ny.gov/Health/Hospital-Inpatient-Discharges-SPARCS-De-Identified/npsr-cm47/data> 
+
+**From website:**
+
+The Statewide Planning and Research Cooperative System (SPARCS) Inpatient De-identified File contains discharge level detail on patient characteristics, diagnoses, treatments, services, and charges. This data file contains basic record level detail for the discharge. The de-identified data file does not contain data that is protected health information (PHI) under HIPAA. The health information is not individually identifiable; all data elements considered identifiable have been redacted. For example, the direct identifiers regarding a date have the day and month portion of the date removed.
+
+Discharges that are identified as Abortion will have some information redacted; Facility ID, Facility Name, Health Service Area, Hospital County, Operating Certificate, and all provider license numbers. Patient zip code is limited to the first three digits. Zip codes for population size less than 20,000 are blank. Out of State are "OOS'. Patient age is presented in age groups: 0 to 17, 18 to 29, 30 to 49, 50 to 69, and 70 or Older.
+
+**Logistics:**
+
+-   2,428,905 rows of patient data
+
+-   34 columns 
+
+    -   Health Service Area
+    -   Hospital County
+    -   Operating Certificate Number
+    -   Facility ID, Facility Name
+    -   Age Group, Zip Code (3 digit)
+    -   Gender
+    -   Race
+    -   Ethnicity
+    -   Length of Stay
+    -   Type of Admission
+    -   Patient Disposition
+    -   Discharge Year
+    -   CCS Diagnosis Code
+    -   CCS Diagnosis Description
+    -   CCS Procedure Code
+    -   CCS Procedure Description
+    -   APR DRG Code
+    -   APR DRG Description
+    -   APR MDC Code
+    -   APR MDC Description
+    -   APR Severity of Illness Code
+    -   APR Severity of Illness
+    -   APR Risk of Mortality
+    -   APR Medical Surgical Description
+    -   Payment Typology
+    -   Payment Typology
+    -   Birth Weight,
+    -   Abortion Edit Indicator
+    -   Emergency Department
+    -   Total Charges
+    -   Total Costs
+
+## Visualizations and Plots
+
+#### **Plot 1: Price vs Length of Stay**
 
 <br />
 
