@@ -97,6 +97,7 @@ length_of_stay <- strtoi(cleaned_data$`Length of Stay`)
 plot(length_of_stay, y,  xlab = "Length of Stay", main = "Price vs Length of Stay", ylab = "Price")
 
 lmfs <- lm(y ~ length_of_stay)
+summary(lmfs)
 abline(lmfs, col = "RED")
 ```
 
