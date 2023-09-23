@@ -4,7 +4,6 @@ format: pdf
 author: Abel Limachi, Austin Tran, Joel Villarino, and Krish Kumar (Group 3)
 editor: visual
 ---
-## 
 
 *(last updated 09/23/2023)*
 
@@ -68,14 +67,15 @@ Discharges that are identified as Abortion will have some information redacted; 
     -   Total Charges
     -   Total Costs
 
-## Visualizations and Plots
+# Visualizations and Plots
 
-#### **Plot 1: Price vs Length of Stay**
+## **Plot 1: Price vs Length of Stay and Linear Regression Statistical Test**
 
 <br />
 
 
 ```{r}
+#| echo: false
 #install.packages("readr")
 library(readr)
 
@@ -88,11 +88,13 @@ cleaned_data <- na.omit(data_set)
 <br />
 
 ```{r}
+#| echo: false
 y <- cleaned_data$`Total Charges`
 ```
 
 
 ```{r}
+#| echo: false
 length_of_stay <- strtoi(cleaned_data$`Length of Stay`)
 plot(length_of_stay, y,  xlab = "Length of Stay", main = "Price vs Length of Stay", ylab = "Price")
 
@@ -100,17 +102,29 @@ lmfs <- lm(y ~ length_of_stay)
 summary(lmfs)
 abline(lmfs, col = "RED")
 ```
+### Linear Regression Statistical Test and Analysis 
 
+In our analysis of patient data for NYC in 2013, we conducted a linear regression to explore the impact of the length of stay on the associated price. The results revealed a statistically significant and strong positive relationship between these variables. The coefficient for 'length_of_stay' was estimated at 6140.73 with a standard error of 6.622 and a remarkably high t-value of 927.39. This suggests that as the length of stay increases, there is a substantial increase in the price, a relationship supported by a p-value close to zero. The R-squared value of 0.5567 indicates that approximately 55.67% of the price variation can be explained by the length of stay, demonstrating its relevance as a predictor. These findings provide important insights for healthcare management and policymaking, highlighting the need to consider and manage the cost implications of varying lengths of stay for NYC patients in 2013.
+
+### Plot Desciption and Inferencing 
+
+In addition to the regression analysis, we visualized the relationship between the length of stay and the associated price using a scatter plot with a fitted regression line. The scatter plot provides a clear graphical representation of the positive correlation between these variables. As the length of stay increases, there is a discernible upward trend in price. The regression line, which is based on the linear regression model we performed, further accentuates this trend. It serves as a useful tool for illustrating the direction and strength of the relationship, making it easier to interpret the practical implications of our findings. This visualization reinforces the statistical significance we observed in our analysis and enhances our understanding of the relationship between patient length of stay and healthcare costs in NYC in 2013.
+
+## **Plot 2: Boxplot of Total Costs**
 
 ```{r}
+#| echo: false
+cleaned_data$'Total Costs'[cleaned_data$'Total Costs' > quantile(cleaned_data$'Total Costs', 0.95)] <- quantile(cleaned_data$'Total Costs', 0.95)
 
 boxplot(cleaned_data$'Total Costs', 
-        main="Box Plot of Total Costs",
-        ylab= "Total costs")
+        main="Box Plot of Total Costs (Outliers Truncated)",
+        ylab="Total Costs")
 ```
+### Plot Desciption and Inferencing 
 
-
-```{r}
+## **Plot 3: Payment Type Distribution**
+```{r warning = FALSE}
+#| echo: false
 options(repr.plot.width = 100, repr.plot.height = 100)
 
 cleaned_data$`Payment Typology 1` <- as.factor(cleaned_data$`Payment Typology 1`)
@@ -119,19 +133,16 @@ pie(payments, main = "Payment Type Distribution", col=rainbow(length(payments)),
 legend("topleft", legend = levels(cleaned_data$`Payment Typology 1`), fill = rainbow(length(payments)), cex = 0.7)
 ```
 
-
+## **Plot 4: Trends in Total Charges and Length of Stay**
 ```{r}
+#| echo: false
 
-# Create the line chart
 plot(cleaned_data$`Length of Stay`, cleaned_data$`Total Charges`, type = "l", col = "blue", xlab = "Length of Stay", ylab = "Total Charges", main = "Trends in Total Charges and Length of Stay")
 
-# Add a line for Total Costs
 lines(cleaned_data$`Birth Weight`, cleaned_data$`Total Costs`, col = "red")
 
-# Add a legend
 legend("topright", legend = c("Total Charges", "Total Costs"), col = c("blue", "red"), lty = 1)
 
-# Add a grid
 grid()
 
 
@@ -139,8 +150,11 @@ grid()
 
 
 ```
-```{r}
 
+## **Plot 5: Heatmap of Gender vs. Age Group**
+
+```{r}
+#| echo: false
 heatmap_data <- table(cleaned_data$`Age Group`, cleaned_data$Gender)
 
 
@@ -158,14 +172,13 @@ heatmap(heatmap_data,
         labCol = col_names) 
 
 ```
+
+## **Plot 6: Barplot of Age Group Distribution of Patients**
 ```{r}
+#| echo: false
 ageGroups <- table(cleaned_data$`Age Group`)
 barplot(ageGroups, main = "Age Group Distribution", xlab = "Age Group", 
         ylab = "Frequency", col = "green", border = "black", ylim = c(0, 300000)) 
 ```
 
 <br />
-
-
-
-
