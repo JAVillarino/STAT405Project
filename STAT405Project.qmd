@@ -118,9 +118,11 @@ cleaned_data$'Total Costs'[cleaned_data$'Total Costs' > quantile(cleaned_data$'T
 
 boxplot(cleaned_data$'Total Costs', 
         main="Box Plot of Total Costs (Outliers Truncated)",
-        ylab="Total Costs")
+        ylab="Total Costs",
+        horizontal = TRUE)
 ```
 ### Plot Desciption and Inferencing 
+The following boxplot refers to our Total Cost data and is representative of our data that has been cleaned to remove outliers that are in our top 5% of data points, meaning that the outliers that are extremely high are cleaned out. 
 
 ## **Plot 3: Payment Type Distribution**
 ```{r warning = FALSE}
@@ -134,7 +136,7 @@ legend("topleft", legend = levels(cleaned_data$`Payment Typology 1`), fill = rai
 ```
 
 ## **Plot 4: Trends in Total Charges and Length of Stay**
-```{r}
+```{r warning = FALSE}
 #| echo: false
 
 plot(cleaned_data$`Length of Stay`, cleaned_data$`Total Charges`, type = "l", col = "blue", xlab = "Length of Stay", ylab = "Total Charges", main = "Trends in Total Charges and Length of Stay")
