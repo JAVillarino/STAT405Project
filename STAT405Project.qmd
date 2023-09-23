@@ -30,6 +30,7 @@ y <- cleaned_data$`Total Charges`
 
 
 ```{r}
+length_of_stay <- strtoi(cleaned_data$`Length of Stay`)
 plot(length_of_stay, y,  xlab = "Length of Stay", main = "Price vs Length of Stay", ylab = "Price")
 
 lmfs <- lm(y ~ length_of_stay)
@@ -38,7 +39,7 @@ abline(lmfs, col = "RED")
 
 
 ```{r}
-length_of_stay <- strtoi(cleaned_data$`Length of Stay`)
+
 boxplot(cleaned_data$'Total Costs', 
         main="Box Plot of Total Costs",
         ylab= "Total costs")
@@ -56,14 +57,42 @@ legend("left", legend = levels(cleaned_data$`Payment Typology 1`), fill = rainbo
 
 
 ```{r}
-admission_freq <- table(cleaned_data$`Type of Admission`)
+
+# Create the line chart
+plot(cleaned_data$`Length of Stay`, cleaned_data$`Total Charges`, type = "l", col = "blue", xlab = "Length of Stay", ylab = "Total Charges", main = "Trends in Total Charges and Length of Stay")
+
+# Add a line for Total Costs
+lines(cleaned_data$`Birth Weight`, cleaned_data$`Total Costs`, col = "red")
+
+# Add a legend
+legend("topright", legend = c("Total Charges", "Total Costs"), col = c("blue", "red"), lty = 1)
+
+# Add a grid
+grid()
 
 
-barplot(admission_freq, xlab = "Type Of Admission", main = "Frequencies for Type of Admission", ylab = "Frequency")
+#Total cost doesn't change even if length of stay increases and total charge increases.
+
+
 ```
 ```{r}
-medianCosts <- tapply(cleaned_data$`Total Costs`, cleaned_data$Race, median)
-barplot(medianCosts, main = "Median Cost by Race", xlab = "Race", ylab = "Median Cost", col = "purple", names.arg = sort(names(medianCosts)), ylim = c(0, max(medianCosts) * 1.5))
+
+heatmap_data <- table(cleaned_data$`Age Group`, cleaned_data$Gender)
+
+
+row_names <- as.factor(rownames(heatmap_data))
+col_names <- as.factor(colnames(heatmap_data))
+
+
+heatmap(heatmap_data,
+        Rowv = NA,          
+        Colv = NA,       
+        col = colorRampPalette(c("white", "blue"))(50),  
+        xlab = "Gender",    
+        main = "Gender v. Age Group",  
+        labRow = row_names, 
+        labCol = col_names) 
+
 ```
 ```{r}
 ageGroups <- table(cleaned_data$`Age Group`)
