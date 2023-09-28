@@ -4,6 +4,7 @@ format: pdf
 author: Abel Limachi, Austin Tran, Joel Villarino, and Krish Kumar (Group 3)
 editor: visual
 ---
+
 *(last updated 09/23/2023)*
 
 **Introduction:**
@@ -75,8 +76,11 @@ Discharges that are identified as Abortion will have some information redacted; 
 ```{r}
 #| echo: false
 #install.packages("readr")
+#install.packages("xtable")
 library(readr)
-
+library(xtable)
+options(xtable.floating = FALSE)
+options(xtable.timestamp = "")
 data_set <- read_csv("Hospital_Inpatient_Discharges__SPARCS_De-Identified___2013.csv",show_col_types = FALSE)
 
 cleaned_data <- na.omit(data_set)
@@ -90,13 +94,13 @@ cleaned_data <- na.omit(data_set)
 y <- cleaned_data$`Total Charges`
 ```
 
-```{r}
+```{r, results='asis'}
 #| echo: false
 length_of_stay <- strtoi(cleaned_data$`Length of Stay`)
 plot(length_of_stay, y,  xlab = "Length of Stay", main = "Price vs Length of Stay", ylab = "Price")
 
 lmfs <- lm(y ~ length_of_stay)
-summary(lmfs)
+xtable(lmfs, comment = FALSE)
 abline(lmfs, col = "RED")
 ```
 
@@ -198,8 +202,6 @@ heatmap(heatmap_data,
 
 ```
 
-
-
 ### Plot Desciption and Inferencing
 
 The following heatmap shows the relationship between the gender and age group for patients in New York in 2013. As we can observe, women tend to be patients at hospitals at a higher rate then men. Especially for the 70 or older bracket which is the highest frequency of hospital patients, females are significantly a larger proprotion of who are patients compared to men. Another important data point to understand is the identification of "U" or individuals who do not identify as male and female, which is high for ages 18-29, which is an important data point to help increase healthcare for individuals with fluid gender identity or may identify as non-binary.
@@ -223,18 +225,50 @@ ggplot(cleaned_data, aes(x = Gender, fill = Race)) +
     values = c("White" = "lightblue", "Black" = "lightcoral", "Other" = "lightgreen"),
     name = "Race"
   ) +
-  scale_y_continuous(labels = scales::comma)
   theme_minimal()
 
 ```
 
-## **Plot 8:
-```{r}
+## Plot 8: Boxplots on the Total Costs on the Risk of Mortality
+
+```{r warning = FALSE}
 #| echo: false
 #install.packages("ggplot2")
-library(ggplot2)
 ggplot(cleaned_data) + 
-        aes("Race", "Total Costs", color = "salmon") + 
-        geom_jitter()
+  aes(x = cleaned_data$'APR Risk of Mortality', y = cleaned_data$"Total Costs", color = "salmon") + 
+  geom_boxplot() +
+  labs(title = "Total Costs on Risk of Mortality",
+       x = "APR Risk of Mortality",  # X-axis title
+       y = "Total Costs")  # Y-axis title
+
+```
+
+## Plot 9: Boxplots on the Total Costs on the Risk of Mortality
+
+```{r warning = FALSE}
+#| echo: false
+
+```
+
+## Plot 10:
+
+```{r warning = FALSE}
+#| echo: false
+
+```
+
+
+## Plot 11:
+
+```{r warning = FALSE}
+#| echo: false
+
+```
+
+
+## Plot 12:
+
+```{r warning = FALSE}
+#| echo: false
 
 ```
