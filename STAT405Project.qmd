@@ -243,7 +243,7 @@ ggplot(cleaned_data) +
 
 ```
 
-## Plot 9: Boxplots on the Total Costs on the Risk of Mortality
+## Plot 9:
 
 ```{r warning = FALSE}
 #| echo: false
@@ -257,18 +257,24 @@ ggplot(cleaned_data) +
 
 ```
 
-
 ## Plot 11:
 
 ```{r warning = FALSE}
 #| echo: false
+ggplot(cleaned_data, aes(x = cleaned_data$`Length of Stay`, y = cleaned_data$`Total Charges`))+
+  geom_point(size = 0.2) +
+  facet_grid(Race ~ `Type of Admission`) +
+  labs(title = "Length of Stay v. Total Charges", x = "Length of Stay", y = "Total Charges")
 
 ```
-
 
 ## Plot 12:
 
 ```{r warning = FALSE}
 #| echo: false
+ggplot(cleaned_data, aes(x = `Total Costs`)) +
+  geom_density(fill = "blue", alpha = 0.5) +
+  facet_grid(`Age Group` ~ .)
+  labs(title = "Density Plot Example", x = "X-axis Label", y = "Density")
 
 ```
