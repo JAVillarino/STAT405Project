@@ -5,7 +5,7 @@ author: Abel Limachi, Austin Tran, Joel Villarino, and Krish Kumar (Group 3)
 editor: visual
 ---
 
-*(last updated 09/23/2023)*
+*(last updated 09/30/2023)*
 
 **Introduction:**
 
@@ -67,17 +67,23 @@ Discharges that are identified as Abortion will have some information redacted; 
     -   Total Charges
     -   Total Costs
 
+<br />
+
+\newpage
+
 # Visualizations and Plots
 
 ## **Plot 1: Price vs Length of Stay and Linear Regression Statistical Test**
 
 <br />
 
-```{r}
+
+```{r, include = FALSE}
 #| echo: false
 # install.packages("readr")
 # install.packages("xtable")
 library(readr)
+library(dplyr)
 library(xtable)
 options(xtable.floating = FALSE)
 options(xtable.timestamp = "")
@@ -97,12 +103,32 @@ y <- cleaned_data$`Total Charges`
 ```{r, results='asis'}
 #| echo: false
 length_of_stay <- strtoi(cleaned_data$`Length of Stay`)
+
+# Set scipen to a large value to avoid scientific notation
+options(scipen = 10)
+
+# Create a scatter plot
 plot(length_of_stay, y, xlab = "Length of Stay", main = "Price vs Length of Stay", ylab = "Price")
 
+# Reset scipen to its default value after the plot
+options(scipen = 0)
+
 lmfs <- lm(y ~ length_of_stay)
-xtable(lmfs, comment = FALSE)
 abline(lmfs, col = "RED")
+
 ```
+<span style="font-size: 14px; font-style: italic;">Figure 1a: Length of Stay on Price Regression Dotplot</span>
+
+
+```{r, results='asis'}
+#| echo: false
+table_lmfs <- xtable::xtable(lmfs, comment = NA, caption = " Figure 1.b: Linear Model Summary")
+
+cat("\\begin{center}\n")
+print(table_lmfs, comment = FALSE)
+cat("\\end{center}\n")
+```
+<i>Figure 1b: Table of Linear Regression Modeling Data</i>
 
 ### Linear Regression Statistical Test and Analysis
 
@@ -112,20 +138,25 @@ In our analysis of patient data for the state of New York in 2013, we conducted 
 
 In addition to the regression analysis, we visualized the relationship between the length of stay and the associated price using a scatter plot with a fitted regression line. The scatter plot provides a clear graphical representation of the positive correlation between these variables. As the length of stay increases, there is a discernible upward trend in price. The regression line, which is based on the linear regression model we performed, further accentuates this trend. It serves as a useful tool for illustrating the direction and strength of the relationship, making it easier to interpret the practical implications of our findings. This visualization reinforces the statistical significance we observed in our analysis and enhances our understanding of the relationship between patient length of stay and healthcare costs for patients in the state of New York in 2013.
 
+\newpage
+
+
 ## **Plot 2: Boxplot of Total Costs**
 
 ```{r}
 #| echo: false
 cleaned_data$"Total Costs"[cleaned_data$"Total Costs" > quantile(cleaned_data$"Total Costs", 0.95)] <- quantile(cleaned_data$"Total Costs", 0.95)
 
-summary(cleaned_data$"Total Costs")
+#summary(cleaned_data$"Total Costs")
 
 boxplot(cleaned_data$"Total Costs",
     main = "Box Plot of Total Costs (Outliers Truncated)",
     ylab = "Total Costs",
     horizontal = TRUE
 )
+
 ```
+<i>Figure 2: Total Costs Boxplot</i>
 
 ### Plot Desciption and Inferencing
 
@@ -133,22 +164,35 @@ The following boxplot refers to our Total Cost data and is representative of our
 
 From this we can infer that there are many outliers, however, in the discussion of costs they are heavily spread and that most patients are paying within our IQR but there are many different outliers that spread when we are discussing costs for healthcare.
 
+\newpage
+
+
 ## **Plot 3: Payment Type Distribution**
 
 ```{r, warning = FALSE, fig.height = 6, fig.width = 50}
 #| echo: false
-options(repr.plot.width = 100, repr.plot.height = 100)
+# Set the margin to include more space at the bottom
+par(mar = c(5, 4, 4, 2) + 0.1)
+
 
 cleaned_data$`Payment Typology 1` <- as.factor(cleaned_data$`Payment Typology 1`)
 payments <- table(cleaned_data$`Payment Typology 1`)
-pie(payments, main = "Payment Type Distribution", col = rainbow(length(payments)), labels = NA, )
+pie(payments, main = "Payment Type Distribution", col = rainbow(length(payments)), labels = NA)
 legend(1, 1, 1, legend = levels(cleaned_data$`Payment Typology 1`), fill = rainbow(length(payments)), cex = 0.7)
 
+
+
+
 ```
+<i>Figure 3: Pie Chart of Payment Distribution</i>
+
 
 ### Plot Desciption and Inferencing
 
 The following piechart identifies the payment type distribution for patients in New York in 2013. As we can observe, most patients are using Medicare as a way to pay for their medical bills followed by Medicaid. These government programs are important to New York residents and provides important data on the impact of healthcare programs. The exact percentagse are Medicaid at 59.7% and Medicaid at 26.7%, followed by Private Insurance at around 10%. This information reveals how important the impact of governmental insurance programs are to individuals in New York.
+
+\newpage
+
 
 ## **Plot 4: Trends in Total Charges and Length of Stay**
 
@@ -161,12 +205,16 @@ lines(cleaned_data$`Birth Weight`, cleaned_data$`Total Costs`, col = "red")
 
 legend("topright", legend = c("Total Charges", "Total Costs"), col = c("blue", "red"), lty = 1)
 
+
 grid()
 ```
+<span style="font-size: 14px; font-style: italic;">Figure 4: Trends of Total Charges and Legnth of Stay </span>
 
 ### Plot Desciption and Inferencing
 
 The plotted data and corresponding projections unmistakably depict a consistent total cost profile, irrespective of variations in both the length of stay and total charges. This apparent lack of correlation between the length of stay and associated costs prompts a deeper inquiry into the potential contributing factors. It would be important to explore the influence of fixed operational costs, negotiated contractual agreements, and astute cost management strategies that may explain this observed financial consistancy between the costs for a hospital and for its patients
+
+\newpage
 
 ## **Plot 5: Barplot of Age Group Distribution of Patients**
 
@@ -177,11 +225,17 @@ barplot(ageGroups,
     main = "Age Group Distribution", xlab = "Age Group",
     ylab = "Frequency", col = "green", border = "black", ylim = c(0, 300000)
 )
+mtext("Figure 5: Age Group and Distribtion", side = 1, line = 4, adj = -0.1, cex = 0.7, font = 3, col = "black")
+
 ```
+<span style="font-size: 14px; font-style: italic;">Figure 5: Age Group Distribution of Patients in New York</span>
 
 ### Plot Desciption and Inferencing
 
 Another important piece of data that we wanted to observe is the amount of patients from each age group of the population. The data is divided into five segmests 0-17, 18-29, 30-49, 50-69, and 70-older. As we can see there is an upward trend of the amount of patients as the ages of the patients increases, although there is a small decrease between 0-17 and 8-29. The largest frequency if the 70-older age bucket which has around 289248 compared to 18-29 with our smallest frequency of 53009.This increase in older patients reveals the impact of older populations in New York and the necesity to increase health care efforts towards older populations.
+
+
+\newpage
 
 ## **Plot 6: Heatmap of Gender vs. Age Group**
 
@@ -203,14 +257,17 @@ heatmap(heatmap_data,
     labRow = row_names,
     labCol = col_names
 )
+mtext("Figure 6: Gender vs. Age Group Heatmap", side = 1, line = 4, adj = -0.1, cex = 0.7, font = 3, col = "black")
 
 ```
+<span style="font-size: 14px; font-style: italic;">Figure 6: Gender vs Age Group Heatmapt</span>
 
 ### Plot Desciption and Inferencing
 
 The following heatmap shows the relationship between the gender and age group for patients in New York in 2013. As we can observe, women tend to be patients at hospitals at a higher rate then men. Especially for the 70 or older bracket which is the highest frequency of hospital patients, females are significantly a larger proprotion of who are patients compared to men. Another important data point to understand is the identification of "U" or individuals who do not identify as male and female, which is high for ages 18-29, which is an important data point to help increase healthcare for individuals with fluid gender identity or may identify as non-binary.
 
-<br />
+\newpage
+
 
 ## Plot 7: Stacked Bar Chart by Gender and Race
 
@@ -218,20 +275,36 @@ The following heatmap shows the relationship between the gender and age group fo
 #| echo: false
 # install.packages("ggplot2")
 library(ggplot2)
-ggplot(cleaned_data, aes(x = Gender, fill = Race)) +
-    geom_bar() +
-    labs(
-        title = "Stacked Bar Chart by Gender and Race",
-        x = "Gender",
-        y = "Count"
-    ) +
-    scale_fill_manual(
-        values = c("White" = "lightblue", "Black" = "lightcoral", "Other" = "lightgreen"),
-        name = "Race"
-    ) +
-    theme_minimal()
+
+plot7 <- ggplot(cleaned_data, aes(x = Gender, fill = Race)) +
+  geom_bar() +
+  labs(
+    title = "Stacked Bar Chart by Gender and Race",
+    x = "Gender",
+    y = "Count"
+  ) +
+  scale_fill_manual(
+    values = c("White" = "lightblue", "African American" = "lightcoral", "Other" = "lightgreen"),
+    breaks = c("White", "Black", "Other"),
+    labels = c("White", "Black", "Other"),
+    name = "Race"
+  ) +
+  theme_minimal()
+
+plot7 + ggtitle("Data Source: mtcars dataset, ggplot2 package")
 
 ```
+<span style="font-size: 14px; font-style: italic;">Figure 7: Stacked Bar Chart by Race and Gender</span>
+
+## Plot Description and Inferencing
+
+In the analysis of patient demographics in the year 2013, a bar chart was employed to visually represent the breakdown of patients by gender and further stratify each gender by race. A notable observation from the chart is the significant predominance of female patients over male patients during this period.
+
+Upon closer examination of the male demographic, the distribution reveals a relatively balanced representation between individuals identified as white and those classified as not white. This suggests a relatively even distribution among male patients concerning racial categories. In contrast, the female demographic exhibits a slightly more diverse distribution across racial categories. This observation implies that, among female patients, there is a greater degree of heterogeneity in terms of racial composition compared to their male counterparts.
+
+These findings contribute valuable insights into the gender and racial composition of the patient population in 2013, emphasizing the need for a nuanced understanding of demographic trends within healthcare settings. Further exploration and analysis of these demographic patterns may reveal additional insights relevant to healthcare planning, resource allocation, and the provision of patient-centered care.
+
+\newpage
 
 ## Plot 8: Boxplots on the Total Costs on the Risk of Mortality
 
@@ -248,57 +321,133 @@ ggplot(cleaned_data) +
     ) # Y-axis title
 
 ```
+<span style="font-size: 14px; font-style: italic;">Figure 8: Boxplots on Total Cost and Mortality</span>
 
-## Plot 9:
+## Plot Description and Inferencing
+In Figure 8, our objective was to assess the central tendency of total hospital costs across different levels of Risk of Mortality. Employing separate box plots for each severity category allowed us to discern distinct patterns in the distribution of total costs associated with varying degrees of mortality risk. Notably, when focusing on Extreme cases of mortality, a clear trend emerged—median total costs were significantly higher, accompanied by a broader spread in the distribution. This observation implies that patients facing an Extreme risk of mortality not only incur higher median costs but also exhibit greater variability in the financial implications of their healthcare, suggesting a more diverse range of medical interventions and resource utilization.
+
+This finding aligns with our initial expectation that higher levels of risk of mortality correspond to elevated costs of care. The discernible trend in the box plots reinforces the intuitive understanding that patients with a greater severity of illness often require more extensive and resource-intensive medical interventions, leading to increased healthcare costs. Beyond its immediate implications, this nuanced analysis offers valuable insights for healthcare planning and resource allocation, emphasizing the need for tailored strategies based on the specific needs associated with varying risk levels. This approach contributes to more effective and efficient healthcare delivery, promoting a patient-centered and economically sustainable healthcare system.
+
+\newpage
+
+## Plot 9: Violin Plot Comparing New York City and Western New York's Severity of Illness
 
 ```{r warning = FALSE}
 #| echo: false
+subsetted_data <- cleaned_data[cleaned_data$`Health Service Area` %in% c("New York City", "Western NY"), ]
 
-```
-
-## Plot 10:
-
-```{r warning = FALSE}
-#| echo: false
-install.packages("ggExtra")
-
-set.seed(100)
+# Load the ggplot2 library
 library(ggplot2)
-library(ggExtra)
-library(dplyr)
-random_samples <- sample_n(cleaned_data, 100, replace = FALSE)
 
-Costs <- random_samples$`Total Costs`
-Charges <- random_samples$`Total Charges`
+# Create a violin plot for APR Severity of Illness Code
+ggplot(subsetted_data, aes(x = factor(`Health Service Area`), y = `APR Severity of Illness Code`, fill = `Health Service Area`)) +
+  geom_violin() +
+  labs(
+    x = "Health Service Area",
+    y = "APR Severity of Illness Code",
+    fill = "Health Service Area",
+    title = "Distribution of APR Severity of Illness Code in New York City"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-g <- ggplot(random_samples, aes(Costs, Charges, howdy)) +
-    geom_count(size = 1) +
-    geom_smooth(method = "lm", se = F, color = "purple") +
-    theme(legend.position = "none", plot.title = element_text(hjust = 0.5)) +
-    ggtitle("Total Costs vs Total Charges for 100 Patients")
-
-ggMarginal(g, type = "histogram")
 
 ```
+<span style="font-size: 14px; font-style: italic;">Figure 9: NYC and Western NY Severity of Illness Comparsion </span>
 
-## Plot 11:
+## Plot Description and Inferencing
+Figure 9 delves into a detailed breakdown of hospital patients, distinguishing between those originating from New York City (NYC) and Western New York (WNY). The focus is on the distribution of patients' APR severity codes, measured on a 1 to 4 scale (1 being mild, 2 being moderate, 3 being serious, and 4 being extreme). Notably, the violin plot reveals a higher frequency of APR severity code 2 assignments for patients from NYC compared to WNY. This divergence prompts exploration into potential variations in labeling practices between the two regions. However, beyond this distinction, the overall shapes of the violin distributions appear similar, suggesting a general alignment in severity profiles. This observation implies a degree of consistency in patient conditions based on APR severity codes, despite the regional differences in labeling practices. Understanding such variations is crucial for refining medical coding precision and ensuring uniformity in patient severity assessments across diverse geographical contexts.
+
+\newpage
+
+
+## Plot 10: Distribution of APR Severity of Illness for Medicaid Patients
+
+```{r, warning = FALSE}
+#| echo: false
+# Load the required libraries
+library(ggplot2)  
+
+
+medicaid_data <- cleaned_data %>%
+  filter(`Payment Typology 1` == "Medicaid")
+
+# Create a ridgeline plot to visualize APR Severity of Illness
+ggplot(medicaid_data, aes(x = `APR Severity of Illness Code`, y = ..density.., fill = `APR Severity of Illness Code`)) +
+  geom_density(alpha = 0.6) +
+  labs(
+    x = "APR Severity of Illness Code",
+    y = "Density",
+    fill = "APR Severity of Illness Code",
+    title = "Distribution of APR Severity of Illness for Medicaid Patients"
+  ) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1")
+
+```
+<span style="font-size: 14px; font-style: italic;">Figure 10: APR Severity of Illness for Medicaid Patients </span>
+
+
+## Plot Description and Inferencing
+In our examination of Figure 10, our focus shifted toward a specific subset of patients—those under Medicaid care. Medicaid, a health program designed to support individuals classified as economically disadvantaged, prompted our investigation into the severity of diagnoses within this demographic. Our objective was to discern whether patients under Medicaid receive comparable attention and care in contrast to their counterparts outside of the program.
+
+Distinct from the broader population, our analysis revealed a notable prevalence of patients with "mild" severity codes among those under Medicaid care. This intriguing observation necessitates careful consideration of various contributing factors. While we refrain from making definitive conclusions about the intentional prioritization of severity levels for Medicaid patients, this finding presents a compelling avenue for further exploration.
+
+The presence of a higher number of "mild" severity cases within the Medicaid subset raises questions about potential disparities in healthcare provision. It is important to acknowledge that a comprehensive understanding of this phenomenon requires additional contextual data. Future investigations could delve deeper into the intricate dynamics surrounding patient severity levels, ensuring a nuanced exploration that considers various influencing factors.
+
+
+
+\newpage
+
+## Plot 11: Facet Grid of Dotplots for Total Charges on Length of Stay
 
 ```{r warning = FALSE}
 #| echo: false
+library(ggplot2)
+
 ggplot(cleaned_data, aes(x = cleaned_data$`Length of Stay`, y = cleaned_data$`Total Charges`)) +
-    geom_point(size = 0.2) +
-    facet_grid(Race ~ `Type of Admission`) +
-    labs(title = "Length of Stay v. Total Charges", x = "Length of Stay", y = "Total Charges")
+  geom_point(size = 0.2) +
+  facet_grid(Race ~ `Type of Admission`) +
+  labs(title = "Length of Stay v. Total Charges", x = "Length of Stay", y = "Total Charges") +
+  scale_y_continuous(labels = scales::comma, 
+                     breaks = scales::pretty_breaks(), 
+                     limits = c(0, max(cleaned_data$`Total Charges`)), # 
+                     expand = c(0, 0)) +
+  theme(axis.text = element_text(size = 8)) 
 
 ```
+<span style="font-size: 14px; font-style: italic;">Figure 11: Dotplots for Total Charges on Length of Stay </span>
 
-## Plot 12:
+## Plot Description and Inferencing
+
+In Figure 11, our aim was to dissect assessments based on both race and the type of admission. Through our analysis, a discernible pattern emerged, revealing consistent spikes in each category of total charges, particularly towards the lower end of the length of stay spectrum. This observation suggests that, irrespective of race, there are commonalities in the distribution of total charges, with pronounced concentration points occurring for shorter stays.
+
+Upon closer examination, the data points appear to be uniformly distributed across all racial categories, implying a degree of similarity in the cost distribution patterns among different racial groups. Interestingly, the primary differentiating factor contributing to variations in total costs is identified as the type of admission. This finding underscores the significance of admission characteristics in influencing healthcare costs, emphasizing that differences in total charges are more prominently linked to variations in admission types rather than racial distinctions.
+
+These insights shed light on the nuanced interplay between race, type of admission, and healthcare costs. Understanding these relationships is crucial for healthcare administrators and policymakers in designing targeted strategies for cost-effective care delivery, ensuring equitable access, and fostering a healthcare system that is both inclusive and economically sustainable.
+
+
+
+\newpage
+
+## Plot 12: Facet Density Plots of Total Cost per Age-Group Buckets
 
 ```{r warning = FALSE}
 #| echo: false
 ggplot(cleaned_data, aes(x = `Total Costs`)) +
-    geom_density(fill = "blue", alpha = 0.5) +
-    facet_grid(`Age Group` ~ .)
-labs(title = "Density Plot Example", x = "X-axis Label", y = "Density")
+  geom_density(fill = "blue", alpha = 0.5) +
+  facet_grid(`Age Group` ~ .) +
+labs(title = "Density Plot of Total Costs per Age-Group Bucket", x = "Total Costs", y = "Density");
 
 ```
+<span style="font-size: 14px; font-style: italic;">Figure 12: Density Plots of Total Costs per Age-Groups</span>
+
+## Plot Description and Inferencing
+In Figure 12, we analyzed age-specific total costs by charting density plots using a facet grid. For patients under 17, costs skewed right, suggesting lower expenses, potentially due to the overall good health of children. In contrast, as age increases, a broader and more dispersed peak in total costs emerges, indicating that older patients require more extensive and potentially costlier healthcare interventions, such as hospice services. This exploration sheds light on age-related patterns in healthcare costs, guiding strategies for resource allocation and care planning across different life stages.
+
+
+\newpage
+
+### References
+New York State Department of Health. "Hospital Inpatient Discharges (SPARCS De-Identified)." data.ny.gov, 2013, https://health.data.ny.gov/Health/Hospital-Inpatient-Discharges-SPARCS-De-Identified/npsr-cm47.
+
