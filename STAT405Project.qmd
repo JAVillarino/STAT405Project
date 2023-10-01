@@ -208,7 +208,7 @@ legend("topright", legend = c("Total Charges", "Total Costs"), col = c("blue", "
 
 grid()
 ```
-<span style="font-size: 14px; font-style: italic;">Figure 4: Trends of Total Charges and Legnth of Stay </span>
+<span style="font-size: 14px; font-style: italic;">Figure 4:Trends of Total Charges and Legnth of Stay </span>
 
 ### Plot Desciption and Inferencing
 
@@ -225,7 +225,6 @@ barplot(ageGroups,
     main = "Age Group Distribution", xlab = "Age Group",
     ylab = "Frequency", col = "green", border = "black", ylim = c(0, 300000)
 )
-mtext("Figure 5: Age Group and Distribtion", side = 1, line = 4, adj = -0.1, cex = 0.7, font = 3, col = "black")
 
 ```
 <span style="font-size: 14px; font-style: italic;">Figure 5: Age Group Distribution of Patients in New York</span>
@@ -257,7 +256,6 @@ heatmap(heatmap_data,
     labRow = row_names,
     labCol = col_names
 )
-mtext("Figure 6: Gender vs. Age Group Heatmap", side = 1, line = 4, adj = -0.1, cex = 0.7, font = 3, col = "black")
 
 ```
 <span style="font-size: 14px; font-style: italic;">Figure 6: Gender vs Age Group Heatmapt</span>
@@ -312,13 +310,14 @@ These findings contribute valuable insights into the gender and racial compositi
 #| echo: false
 # install.packages("ggplot2")
 ggplot(cleaned_data) +
-    aes(x = cleaned_data$"APR Risk of Mortality", y = cleaned_data$"Total Costs", color = "salmon") +
-    geom_boxplot() +
-    labs(
-        title = "Total Costs on Risk of Mortality",
-        x = "APR Risk of Mortality", # X-axis title
-        y = "Total Costs"
-    ) # Y-axis title
+  aes(x = `APR Risk of Mortality`, y = `Total Costs`) +
+  geom_boxplot(color = "salmon") +
+  labs(
+    title = "Total Costs on Risk of Mortality",
+    x = "APR Risk of Mortality",
+    y = "Total Costs"
+  ) +
+  theme_minimal()
 
 ```
 <span style="font-size: 14px; font-style: italic;">Figure 8: Boxplots on Total Cost and Mortality</span>
@@ -434,11 +433,14 @@ These insights shed light on the nuanced interplay between race, type of admissi
 
 ```{r warning = FALSE}
 #| echo: false
-ggplot(cleaned_data, aes(x = `Total Costs`)) +
-  geom_density(fill = "blue", alpha = 0.5) +
+gg <- ggplot(cleaned_data, aes(x = `Total Costs`, y = ..density.., fill = `Age Group`)) +
+  geom_density(alpha = 0.5) +
   facet_grid(`Age Group` ~ .) +
-labs(title = "Density Plot of Total Costs per Age-Group Bucket", x = "Total Costs", y = "Density");
+  labs(title = "Density Plot of Total Costs per Age-Group Bucket", x = "Total Costs", y = "Density")
 
+gg + scale_y_continuous(labels = scales::number_format(scale = 1e-3)) +
+  labs(title = "Density Plot of Total Costs per Age-Group Bucket", x = "Total Costs", y = "Density (in thousands)") +
+  theme_minimal()
 ```
 <span style="font-size: 14px; font-style: italic;">Figure 12: Density Plots of Total Costs per Age-Groups</span>
 
