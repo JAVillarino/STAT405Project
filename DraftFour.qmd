@@ -126,8 +126,9 @@ cat("\\begin{center}\n")
 print(table_lmfs, comment = FALSE)
 cat("\\end{center}\n")
 ```
-
+\begin{center}
 Table 1: Table of Linear Regression Modeling Data
+\end{center}
 
 ### Linear Regression Statistical Test and Analysis
 
@@ -204,6 +205,8 @@ data_sf$centroid <- st_centroid(st_geometry(data_sf))
 Figure 2: Individuals on Medicaid by Race and Borough
 \end{center}
 ```
+## Plot Description and Inferencing
+
 \newpage
 ## Plot 3: Map of Individuals on Medicare by Race**
 
@@ -499,6 +502,20 @@ Figure 10: Pie Charts on Payment Type by Race
 \end{center}
 
 ## Plot Description and Inferencing
+Pie Chart 1: White Patients
+
+In the first pie chart, which represents White patients, a significant portion of them use Medicare as their Payment Type. This choice reflects a trend among White patients, which is that a high percentage of them will rely on Medicare to cover their Hospital Charges. Between those that are not using Medicare, they would instead use Medicaid, Blue Cross/Blue Shield, or Private Health Insurances.
+
+Pie Chart 2: Black/African American Patients
+
+The second pie chart, which illustrates Black/African American patients, reveals a inclination towards Medicare, but a significant amount of patients would also use Medicaid. This suggests that there is a dual reliance on both the Medicare and Medicaid insurances, and this pie chart shows this trend.
+
+Pie Chart 3: Other Race Patients
+
+In the third pie chart, which represents the patients that are of other races, we see a greater split. Approximately half of the patients choose Medicare, and a majority of the patients that have not chosen Medicare rely on Medicaid instead. This shows a somewhat balanced usage between Medicare and Medicaid by this demographic of patients.
+
+These insights, derived from the pie charts, shed light on the nuanced payment patterns across different racial groups in the context of the year 2013, emphasizing the significance of understanding and catering to diverse payment preferences within the healthcare system of that time.
+
 
 ### References
 
