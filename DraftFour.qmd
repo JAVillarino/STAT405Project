@@ -17,11 +17,11 @@ The following project contains different visualizations and statistics that will
 
 **Dataset:**
 
-2013 Hospital Inpatient Discharges in the State of New York 
+2013 Hospital Inpatient Discharges in the State of New York 
 
 *The following data set was received from the official New York State Health website on heath.data.ny.gov*
 
-<https://health.data.ny.gov/Health/Hospital-Inpatient-Discharges-SPARCS-De-Identified/npsr-cm47/data> 
+<https://health.data.ny.gov/Health/Hospital-Inpatient-Discharges-SPARCS-De-Identified/npsr-cm47/data> 
 
 **From website:**
 
@@ -33,7 +33,7 @@ Discharges that are identified as Abortion will have some information redacted; 
 
 -   2,428,905 rows of patient data
 
--   34 columns 
+-   34 columns 
 
     -   Health Service Area
     -   Hospital County
@@ -79,10 +79,8 @@ library(RSQLite)
 library(readr)
 library(dplyr)
 library(xtable)
-library(ggplot2)
 
 dcon <- dbConnect(SQLite(), dbname = "finalDB.db", timeout = 10)
-
 
 ```
 
@@ -115,7 +113,7 @@ abline(lmfs, col = "RED")
 
 ```{=tex}
 \begin{center}
-Figure 1a: Length of Stay on Price Regression Dotplot
+Figure 1: Length of Stay on Price Regression Dotplot
 \end{center}
 ```
 ```{r, results='asis'}
@@ -126,9 +124,8 @@ cat("\\begin{center}\n")
 print(table_lmfs, comment = FALSE)
 cat("\\end{center}\n")
 ```
-\begin{center}
+
 Table 1: Table of Linear Regression Modeling Data
-\end{center}
 
 ### Linear Regression Statistical Test and Analysis
 
@@ -136,7 +133,7 @@ In our analysis of patient data for the state of New York in 2013, we conducted 
 
 \newpage
 
-## Plot 2: Heat Map of Individuals on Medicaid by Race and Borough**
+## Plot 2: Heat Map of Individuals on Medicaid by Race and Borough
 
 ```{r, fig.height = 6, fig.width = 9, message = FALSE, warning = FALSE}
 #| echo: false
@@ -206,9 +203,12 @@ Figure 2: Individuals on Medicaid by Race and Borough
 \end{center}
 ```
 ## Plot Description and Inferencing
+Figure 2 is a heatmap illustrating the distribution of individuals on Medicaid across New York City boroughs, segmented by race. The X-axis represents boroughs such as Bronx, Kings (Brooklyn), Manhattan, Queens, and Richmond (Staten Island), while the Y-axis distinguishes between White and Black/African American racial groups. The color gradient, ranging from light to dark red, indicates the count of individuals, with darker tones signifying higher numbers. Notably, Kings (Brooklyn) has a significant number of Black/African American individuals on Medicaid, while Manhattan displays a higher count of White individuals. Richmond (Staten Island) exhibits lower numbers for both racial categories. Meanwhile, Bronx and Queens show a relatively balanced distribution between the two groups. This visualization offers essential insights into the racial demographics of Medicaid beneficiaries in NYC, serving as a valuable resource for policymakers and healthcare administrators.
+
+
 
 \newpage
-## Plot 3: Map of Individuals on Medicare by Race**
+## Plot 3: Map of Individuals on Medicare by Race
 
 
 ```{r, warning = FALSE}
@@ -251,10 +251,13 @@ Figure 3: Map of NYC displaying number of individuals on Medicaid by Borough
 \end{center}
 ```
 ## Plot Description and Inferencing
+Figure 3 presents a geographical representation of New York City, displaying the number of individuals on Medicaid across different boroughs, differentiated by race. The boroughs—Bronx, Kings (Brooklyn), Queens, and Richmond (Staten Island)—are distinctly colored, while two circular points within each borough indicate the counts of Black/African American and White individuals. The size of the circles signifies the number of individuals, with larger circles representing higher counts, and the color of each circle (blue for Black/African American and red for White) represents the respective racial groups. A notable observation is the prominent size of the blue circle in Kings (Brooklyn), highlighting a substantial count of Black/African American individuals on Medicaid. Conversely, Manhattan has a noticeably larger red circle, indicating a higher number of White individuals. This map offers a visual synthesis of Medicaid beneficiaries' racial distribution across NYC boroughs, informing stakeholders about the demographic landscape of healthcare recipients in the metropolis.
+
+
 
 \newpage
 
-## Plot 4: Waffle Plot of Severity of Illness by Race**
+## Plot 4: Waffle Plot of Severity of Illness by Race
 
 ```{r}
 #| echo: false
@@ -337,37 +340,10 @@ In figure 5, the bar plot illustrates a compelling contrast in average total cha
 pandemic, this disparity between average total charges of Black patients and White patients
 increased, showing that the pandemic potentially increased already present disparity in healthcare.
 \newpage
-## Plot 6: Boxplots on the Total Costs on the Risk of Mortality
 
-```{r warning = FALSE}
-#| echo: false
-library(ggplot2)
-ggplot(cleaned_data) +
-  aes(x = `APRRiskofMortality`, y = `TotalCosts`) +
-  geom_boxplot(color = "salmon") +
-  labs(
-    title = "Total Costs on Risk of Mortality",
-    x = "APR Risk of Mortality",
-    y = "Total Costs"
-  ) +
-  theme_minimal()
 
-```
 
-```{=tex}
-\begin{center}
-Figure 6: Boxplots on Total Cost and Mortality
-\end{center}
-```
-## Plot Description and Inferencing
-
-In Figure 6, our objective was to assess the central tendency of total hospital costs across different levels of Risk of Mortality. Employing separate box plots for each severity category allowed us to discern distinct patterns in the distribution of total costs associated with varying degrees of mortality risk. Notably, when focusing on Extreme cases of mortality, a clear trend emerged---median total costs were significantly higher, accompanied by a broader spread in the distribution. This observation implies that patients facing an Extreme risk of mortality not only incur higher median costs but also exhibit greater variability in the financial implications of their healthcare, suggesting a more diverse range of medical interventions and resource utilization.
-
-This finding aligns with our initial expectation that higher levels of risk of mortality correspond to elevated costs of care. The discernible trend in the box plots reinforces the intuitive understanding that patients with a greater severity of illness often require more extensive and resource-intensive medical interventions, leading to increased healthcare costs. Beyond its immediate implications, this nuanced analysis offers valuable insights for healthcare planning and resource allocation, emphasizing the need for tailored strategies based on the specific needs associated with varying risk levels.
-
-\newpage
-
-## Plot 7: Violin Plot Comparing New York City and Western New York's Severity of Illness
+## Plot 6: Violin Plot Comparing New York City and Western New York's Severity of Illness
 
 ```{r warning = FALSE}
 #| echo: false
@@ -392,16 +368,16 @@ ggplot(subsetted_data, aes(x = factor(`HealthServiceArea`), y = `APRSeverityofIl
 ```
 
 \begin{center}
-Figure 7: NYC and Western NY Severity of Illness Comparsion
+Figure 6: NYC and Western NY Severity of Illness Comparsion
 \end{center}
 
 ## Plot Description and Inferencing
 
-Figure 7 delves into a detailed breakdown of hospital patients, distinguishing between those originating from New York City (NYC) and Western New York (WNY). The focus is on the distribution of patients' APR severity codes, measured on a 1 to 4 scale (1 being mild, 2 being moderate, 3 being serious, and 4 being extreme). Notably, the violin plot reveals a higher frequency of APR severity code 2 assignments for patients from NYC compared to WNY. This divergence prompts exploration into potential variations in labeling practices between the two regions. However, beyond this distinction, the overall shapes of the violin distributions appear similar, suggesting a general alignment in severity profiles. This observation implies a degree of consistency in patient conditions based on APR severity codes, despite the regional differences in labeling practices. Understanding such variations is crucial for refining medical coding precision and ensuring uniformity in patient severity assessments across diverse geographical contexts.
+Figure 6 delves into a detailed breakdown of hospital patients, distinguishing between those originating from New York City (NYC) and Western New York (WNY). The focus is on the distribution of patients' APR severity codes, measured on a 1 to 4 scale (1 being mild, 2 being moderate, 3 being serious, and 4 being extreme). Notably, the violin plot reveals a higher frequency of APR severity code 2 assignments for patients from NYC compared to WNY. This divergence prompts exploration into potential variations in labeling practices between the two regions. However, beyond this distinction, the overall shapes of the violin distributions appear similar, suggesting a general alignment in severity profiles. This observation implies a degree of consistency in patient conditions based on APR severity codes, despite the regional differences in labeling practices. Understanding such variations is crucial for refining medical coding precision and ensuring uniformity in patient severity assessments across diverse geographical contexts.
 
 \newpage
 
-## Plot 8: Distribution of APR Severity of Illness for Medicaid Patients
+## Plot 7: Distribution of APR Severity of Illness for Medicaid Patients
 
 ```{r, warning = FALSE}
 #| echo: false
@@ -427,11 +403,11 @@ ggplot(medicaid_data, aes(x = `APRSeverityofIllnessCode`, y = ..density.., fill 
 ```
 
 \begin{center}
-Figure 8: APR Severity of Illness for Medicaid Patients
+Figure 7: APR Severity of Illness for Medicaid Patients
 \end{center}
 ## Plot Description and Inferencing
 
-In our examination of Figure 8, our focus shifted toward a specific subset of patients---those under Medicaid care. Medicaid, a health program designed to support individuals classified as economically disadvantaged, prompted our investigation into the severity of diagnoses within this demographic. Our objective was to discern whether patients under Medicaid receive comparable attention and care in contrast to their counterparts outside of the program.
+In our examination of Figure 7, our focus shifted toward a specific subset of patients---those under Medicaid care. Medicaid, a health program designed to support individuals classified as economically disadvantaged, prompted our investigation into the severity of diagnoses within this demographic. Our objective was to discern whether patients under Medicaid receive comparable attention and care in contrast to their counterparts outside of the program.
 
 Distinct from the broader population, our analysis revealed a notable prevalence of patients with "mild" severity codes among those under Medicaid care. This intriguing observation necessitates careful consideration of various contributing factors. While we refrain from making definitive conclusions about the intentional prioritization of severity levels for Medicaid patients, this finding presents a compelling avenue for further exploration.
 
@@ -439,16 +415,22 @@ The presence of a higher number of "mild" severity cases within the Medicaid sub
 
 \newpage
 
-## Plot 9: Facet Density Plots of Total Cost per Age-Group Buckets
+## Plot 8: Facet Density Plots of Total Cost per Age-Group Buckets
 
-```{r warning = FALSE}
+```{r warning = FALSE, fig.width = 7, fig.height = 5}
 #| echo: false
-gg <- ggplot(cleaned_data, aes(x = `TotalCosts`, y = ..density.., fill = `AgeGroup`)) +
+data_set <- read_csv("Hospital_Inpatient_Discharges__SPARCS_De-Identified___2013.csv",show_col_types = FALSE)
+
+clean <- na.omit(data_set)
+
+gg <- ggplot(clean, aes(x = `Total Costs`, y = ..density.., fill = `Age Group`)) +
   geom_density(alpha = 0.5) +
-  facet_grid(`AgeGroup` ~ .) +
+  facet_grid(`Age Group` ~ .) +
   labs(title = "Density Plot of Total Costs per Age-Group Bucket", x = "Total Costs", y = "Density")
 
-gg + scale_y_continuous(labels = scales::number_format(scale = 1e-3)) +
+gg + 
+  scale_x_continuous(limits = c(0, 35000)) +
+  scale_y_continuous(labels = scales::number_format(scale = 1e-3)) +
   labs(title = "Density Plot of Total Costs per Age-Group Bucket", x = "Total Costs", y = "Density (in thousands)") +
   theme_minimal()
 ```
@@ -456,18 +438,18 @@ gg + scale_y_continuous(labels = scales::number_format(scale = 1e-3)) +
 ```{=tex}
 \begin{center}
 
-Figure 9: Density Plots of Total Costs per Age-Groups
+Figure 8: Density Plots of Total Costs per Age-Groups
 
 \end{center}
 ```
 ## Plot Description and Inferencing
 
-In Figure 9, we analyzed age-specific total costs by charting density plots using a facet grid. For patients under 17, costs skewed right, suggesting lower expenses, potentially due to the overall good health of children. In contrast, as age increases, a broader and more dispersed peak in total costs emerges, indicating that older patients require more extensive and potentially costlier healthcare interventions, such as hospice services. This exploration sheds light on age-related patterns in healthcare costs, guiding strategies for resource allocation and care planning across different life stages.
+In Figure 8, we analyzed age-specific total costs by charting density plots using a facet grid. For patients under 17, costs skewed right, suggesting lower expenses, potentially due to the overall good health of children. In contrast, as age increases, a broader and more dispersed peak in total costs emerges, indicating that older patients require more extensive and potentially costlier healthcare interventions, such as hospice services. This exploration sheds light on age-related patterns in healthcare costs, guiding strategies for resource allocation and care planning across different life stages.
 
 \newpage
 
-## Plot 10: Pie Charts of Payment Type by Race
-```{r}
+## Plot 9: Pie Charts of Payment Type by Race
+```{r, message = FALSE}
 #| echo: false
 library(ggplot2)
 library(gridExtra)
@@ -478,7 +460,7 @@ paymentTypeAndRaceQ <- dbSendQuery(dcon, "
                                     SELECT Race, PaymentTypology1 FROM '2013data' WHERE Race != 'Unknown';")
 paymentTypeAndRaceDF <- dbFetch(paymentTypeAndRaceQ, -1)
 dbClearResult(paymentTypeAndRaceQ)
-str(paymentTypeAndRaceDF)
+#str(paymentTypeAndRaceDF)
 
 pie_charts <- lapply(unique(paymentTypeAndRaceDF$Race), function(race) {
   data_subset <- subset(paymentTypeAndRaceDF, Race == race)
@@ -497,11 +479,15 @@ pie_charts <- lapply(unique(paymentTypeAndRaceDF$Race), function(race) {
 })
 pie_charts[[1]] + pie_charts[[2]] + pie_charts[[3]] + plot_layout(ncol = 1)
 ```
+
+```{=tex}
 \begin{center}
-Figure 10: Pie Charts on Payment Type by Race
+Figure 9: Pie Charts on Payment Type by Race
 \end{center}
+```
 
 ## Plot Description and Inferencing
+
 Pie Chart 1: White Patients
 
 In the first pie chart, which represents White patients, a significant portion of them use Medicare as their Payment Type. This choice reflects a trend among White patients, which is that a high percentage of them will rely on Medicare to cover their Hospital Charges. Between those that are not using Medicare, they would instead use Medicaid, Blue Cross/Blue Shield, or Private Health Insurances.
@@ -516,6 +502,7 @@ In the third pie chart, which represents the patients that are of other races, w
 
 These insights, derived from the pie charts, shed light on the nuanced payment patterns across different racial groups in the context of the year 2013, emphasizing the significance of understanding and catering to diverse payment preferences within the healthcare system of that time.
 
+\newpage
 
 ### References
 
