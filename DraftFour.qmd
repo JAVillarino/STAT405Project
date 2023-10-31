@@ -79,7 +79,7 @@ library(RSQLite)
 library(readr)
 library(dplyr)
 library(xtable)
-
+library(ggplot2)
 
 dcon <- dbConnect(SQLite(), dbname = "finalDB.db", timeout = 10)
 
@@ -338,9 +338,9 @@ increased, showing that the pandemic potentially increased already present dispa
 
 ```{r warning = FALSE}
 #| echo: false
-# install.packages("ggplot2")
+library(ggplot2)
 ggplot(cleaned_data) +
-  aes(x = `APR Risk of Mortality`, y = `Total Costs`) +
+  aes(x = `APRRiskofMortality`, y = `TotalCosts`) +
   geom_boxplot(color = "salmon") +
   labs(
     title = "Total Costs on Risk of Mortality",
@@ -368,13 +368,13 @@ This finding aligns with our initial expectation that higher levels of risk of m
 
 ```{r warning = FALSE}
 #| echo: false
-subsetted_data <- cleaned_data[cleaned_data$`Health Service Area` %in% c("New York City", "Western NY"), ]
+subsetted_data <- cleaned_data[cleaned_data$`HealthServiceArea` %in% c("New York City", "Western NY"), ]
 
 # Load the ggplot2 library
 library(ggplot2)
 
 # Create a violin plot for APR Severity of Illness Code
-ggplot(subsetted_data, aes(x = factor(`Health Service Area`), y = `APR Severity of Illness Code`, fill = `Health Service Area`)) +
+ggplot(subsetted_data, aes(x = factor(`HealthServiceArea`), y = `APRSeverityofIllnessCode`, fill = `HealthServiceArea`)) +
   geom_violin() +
   labs(
     x = "Health Service Area",
@@ -407,10 +407,10 @@ library(ggplot2)
 
 
 medicaid_data <- cleaned_data %>%
-  filter(`Payment Typology 1` == "Medicaid")
+  filter(`PaymentTypology1` == "Medicaid")
 
 # Create a ridgeline plot to visualize APR Severity of Illness
-ggplot(medicaid_data, aes(x = `APR Severity of Illness Code`, y = ..density.., fill = `APR Severity of Illness Code`)) +
+ggplot(medicaid_data, aes(x = `APRSeverityofIllnessCode`, y = ..density.., fill = `APRSeverityofIllnessCode`)) +
   geom_density(alpha = 0.6) +
   labs(
     x = "APR Severity of Illness Code",
@@ -440,9 +440,9 @@ The presence of a higher number of "mild" severity cases within the Medicaid sub
 
 ```{r warning = FALSE}
 #| echo: false
-gg <- ggplot(cleaned_data, aes(x = `Total Costs`, y = ..density.., fill = `Age Group`)) +
+gg <- ggplot(cleaned_data, aes(x = `TotalCosts`, y = ..density.., fill = `AgeGroup`)) +
   geom_density(alpha = 0.5) +
-  facet_grid(`Age Group` ~ .) +
+  facet_grid(`AgeGroup` ~ .) +
   labs(title = "Density Plot of Total Costs per Age-Group Bucket", x = "Total Costs", y = "Density")
 
 gg + scale_y_continuous(labels = scales::number_format(scale = 1e-3)) +
@@ -500,19 +500,6 @@ Figure 10: Pie Charts on Payment Type by Race
 
 ## Plot Description and Inferencing
 
-Pie Chart 1: White Patients
-
-In the first pie chart, which represents White patients, a significant portion of them use Medicare as their Payment Type. This choice reflects a trend among White patients, which is that a high percentage of them will rely on Medicare to cover their Hospital Charges. Between those that are not using Medicare, they would instead use Medicaid, Blue Cross/Blue Shield, or Private Health Insurances.
-
-Pie Chart 2: Black/African American Patients
-
-The second pie chart, which illustrates Black/African American patients, reveals a inclination towards Medicare, but a significant amount of patients would also use Medicaid. This suggests that there is a dual reliance on both the Medicare and Medicaid insurances, and this pie chart shows this trend.
-
-Pie Chart 3: Other Race Patients
-
-In the third pie chart, which represents the patients that are of other races, we see a greater split. Approximately half of the patients choose Medicare, and a majority of the patients that have not chosen Medicare rely on Medicaid instead. This shows a somewhat balanced usage between Medicare and Medicaid by this demographic of patients.
-
-These insights, derived from the pie charts, shed light on the nuanced payment patterns across different racial groups in the context of the year 2013, emphasizing the significance of understanding and catering to diverse payment preferences within the healthcare system of that time.
 ### References
 
 New York State Department of Health. "Hospital Inpatient Discharges (SPARCS De-Identified)." data.ny.gov, 2013, https://health.data.ny.gov/Health/Hospital-Inpatient-Discharges-SPARCS-De-Identified/npsr-cm47.
