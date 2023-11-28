@@ -6,6 +6,7 @@ format:
   revealjs: 
     transition: slide
     background-transition: fade
+    transition-speed: slow
     center: true
     # embed-resources: true
     slide-number: true
@@ -69,13 +70,13 @@ Patient Data from the State of New York were aggregated in this dataset from the
 -   Total Charges
 -   Total Costs
 -   Payment Typology
+-   CCS Procedure Description
+-   CCS Diagnosis Code
 :::
 :::
 
 ::: {.column width="50%"}
 ::: {style="font-size:16px"}
--   CCS Procedure Description
--   CCS Diagnosis Code
 -   CCS Diagnosis Description
 -   CCS Procedure Code
 -   APR MDC Code
@@ -96,7 +97,6 @@ Patient Data from the State of New York were aggregated in this dataset from the
 ## Variable Analysis 
 
 ::: {style="font-size:25px"}
-::: incremental
 -   APR Severity of Illness
 -   Hospital County
 -   Age Group
@@ -107,7 +107,6 @@ Patient Data from the State of New York were aggregated in this dataset from the
 -   Total Charges
 -   Total Costs
 -   Payment Typology
-:::
 :::
 
 # Severity of Illness Visualizations {background="#D2B48C"}
@@ -286,7 +285,7 @@ data <- dbFetch(query, -1)
 ggplot(data, aes(x = `HospitalCounty`, y = `Race`, fill = count)) +
   geom_tile() +
   scale_fill_gradient(low = "white", high = "red") +
-  labs(title = "Number of Black/Other Race Individuals on Medicaid in NYC", 
+  labs(title = "Number of White and Black/Other Race Individuals on Medicaid in NYC", 
        x = "Borough", 
        y = "Race", 
        fill = "Count") +
@@ -372,7 +371,7 @@ ggplot(data_sf) +
   scale_color_manual(values = c("Black/African American" = "blue", "White" = "red"), name = "Race") +
   scale_size_continuous(name = "Count", breaks = c(10000,20000,30000,40000,50000)) +
   labs(title = "Number of Black vs. White Individuals on Medicaid in NYC Boroughs",
-       subtitle = "Size of point indicates count, color indicates race") +
+       subtitle = "Size of point indicates count, color indicates county") +
   theme_minimal() +
   theme(legend.position = "right", axis.title.x = element_blank(), axis.title.y = element_blank(),
         axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks = element_blank())
@@ -714,3 +713,6 @@ total_count <- length(cleaned_data$APRDRGCode)
 2021 Dataset:
 
 [https://www.health.ny.gov/statistics/vital_statistics/2021/](https://www.health.ny.gov/statistics/vital_statistics/2013/https://www.health.ny.gov/statistics/vital_statistics/2021/)
+
+# Questions {background="#D2B48C"}
+
