@@ -1,0 +1,716 @@
+---
+title: "Healthcare Analysis in the State of New York - Hospital Data"
+subtitle: "STAT 405 Final Project" 
+author: Krish Kumar, Abel Limachi, Austin Tran, Joel Villarino
+format:
+  revealjs: 
+    transition: slide
+    background-transition: fade
+    center: true
+    # embed-resources: true
+    slide-number: true
+    chalkboard: 
+      buttons: false
+    preview-links: auto
+    css: styles.css
+    footer: STAT 405 - Fall 2023 (Kumar, Limachi, Tran, Villarino)
+server: shiny
+---
+
+# Primary Dataset Overview {background="#D2B48C"}
+
+```{r setup, echo=FALSE,  warning = FALSE, message = FALSE, fig.align='center'}
+#| context: setup
+
+library(stringr)
+library(dplyr)
+library(grid)
+library(gridExtra)
+library(RSQLite)
+library(shiny)
+library(DBI)
+library(RSQLite)
+library(ggplot2)
+library(sf)
+library(waffle)
+library(patchwork)
+library(tigris)
+library(ggplot2)
+library(viridis)
+library(lubridate)
+library(sf)
+library(DBI)
+library(flextable)
+
+
+dcon <- dbConnect(SQLite(), dbname = "finalDB.db", timeout = 10)
+```
+
+## 2013 New York Hospital Data
+
+**Number of Patients**: $2,428,905$
+
+Patient Data from the State of New York were aggregated in this dataset from the NY Health Dept. with features including:
+
+**Variables:**
+
+::: columns
+::: {.column width="50%"}
+::: {style="font-size:16px"}
+-   APR Severity of Illness Code
+-   APR Severity of Illness
+-   Health Service Area
+-   Hospital County
+-   Age Group
+-   Gender
+-   Race
+-   Ethnicity
+-   Length of Stay
+-   Total Charges
+-   Total Costs
+-   Payment Typology
+:::
+:::
+
+::: {.column width="50%"}
+::: {style="font-size:16px"}
+-   CCS Procedure Description
+-   CCS Diagnosis Code
+-   CCS Diagnosis Description
+-   CCS Procedure Code
+-   APR MDC Code
+-   APR MDC Description
+-   APR DRG Code
+-   APR DRG Description
+-   APR Risk of Mortality
+-   Abortion Edit Indicator
+-   Emergency Department
+-   Type of Admission
+-   Facility ID
+-   Facility Name
+-   Zip Code (3 digit)
+:::
+:::
+:::
+
+## Variable Analysis 
+
+::: {style="font-size:25px"}
+::: incremental
+-   APR Severity of Illness
+-   Hospital County
+-   Age Group
+-   Gender
+-   Race
+-   Ethnicity
+-   Length of Stay
+-   Total Charges
+-   Total Costs
+-   Payment Typology
+:::
+:::
+
+# Severity of Illness Visualizations {background="#D2B48C"}
+
+## Waffle Plot of Severity of Illness by Race
+
+```{r Waffle Plot}
+query <- dbSendQuery(dcon,"
+SELECT Race, APRSeverityofIllnessCode FROM '2013data';
+                     ")
+IllnessCodes <- dbFetch(query, -1)
+dbClearResult(query)
+
+waffle_data1 <- data.frame(count = table(IllnessCodes$APRSeverityofIllnessCode[IllnessCodes$Race == "Black/African American"])/2480)
+waffle_data2 <- data.frame(count = table(IllnessCodes$APRSeverityofIllnessCode[IllnessCodes$Race == "White"])/5050)
+
+layout(matrix(c(1, 2), nrow = 1))
+
+plot1 <- waffle(waffle_data1, rows = 8, size = .5, 
+            colors = c("#FFEDA0", "#FEB24C", "#FC4E2A", "#BD0026"), title = "Black/African Americans")
+plot2 <- waffle(waffle_data2, rows = 8, size = .5, 
+            colors = c("#FFEDA0", "#FEB24C", "#FC4E2A", "#BD0026"), title = "White")
+
+arrange.plots <- plot1 + theme(plot.title = element_text(size = 10)) + plot2 + theme(plot.title = element_text(size = 10))
+arrange.plots
+```
+
+## Violin Plot of Severity of Illness by Geographical Location
+
+```{r Violin Plot}
+query <- dbSendQuery(dcon,"
+SELECT *
+FROM '2013data';
+")
+cleaned_data <- dbFetch(query, -1)
+dbClearResult(query)
+subsetted_data <- cleaned_data[cleaned_data$`HealthServiceArea` %in% c("New York City", "Western NY"), ]
+
+library(ggplot2)
+
+# Create a violin plot for APR Severity of Illness Code
+ggplot(subsetted_data, aes(x = factor(`HealthServiceArea`), y = `APRSeverityofIllnessCode`, fill = `HealthServiceArea`)) +
+  geom_violin() +
+  labs(
+    x = "Health Service Area",
+    y = "APR Severity of Illness Code",
+    fill = "Health Service Area",
+    title = "Distribution of APR Severity of Illness Code in New York City and Western NY"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+# Disparities in Charges and Costs {background="#D2B48C"}
+
+## Bar Charts of Total Charge for Pregnant Women for Race (2013 & 2021)
+
+```{r, .center}
+library(ggplot2)
+library(patchwork)
+
+pregnant_womenQ <- dbSendQuery(dcon, "
+    SELECT Race, TotalCharges
+    FROM '2013data'
+    WHERE APRMDCCode == 14 OR APRMDCCode == 15;")
+pregnant_womenDF = dbFetch(pregnant_womenQ, -1)
+dbClearResult(pregnant_womenQ)
+
+plot_race2013 <- ggplot(pregnant_womenDF) + 
+  aes(x = Race, y = TotalCharges) +
+  stat_summary(fun = "mean", geom = "bar", fill = "salmon") +  # Calculate and plot averages
+  labs(x = "Race", y = "Average Total Charges", title = "Average Total Charge by Race in 2013") +  # Customize axis labels
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(size = 7))  # Rotate x-axis labels for
+
+
+pregnant_womenQ2 <- dbSendQuery(dcon, "
+    SELECT Race, TotalCharges
+    FROM '2021data'
+    WHERE APRMDCCode == 14 OR APRMDCCode == 15 AND Race != 'Multi-racial';")
+pregnant_womenDF2 = dbFetch(pregnant_womenQ2, -1)
+dbClearResult(pregnant_womenQ2)
+  
+plot_race2021 <- ggplot(pregnant_womenDF2) + 
+  aes(x = Race, y = TotalCharges) +
+  stat_summary(fun = "mean", geom = "bar", fill = "violet") +  # Calculate and plot averages
+  labs(x = "Race", y = "Average Total Charges", title = "Average Total Charge by Race in 2021") +  # Customize axis labels
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(size = 7))  # Rotate x-axis labels for
+
+
+combined_plot_race <- plot_race2013 + plot_race2021
+combined_plot_race
+```
+
+## Facet Density Plots of Total Cost per Age-Group Buckets
+
+```{r}
+
+gg <- ggplot(cleaned_data, aes(x = `TotalCosts`, y = ..density.., fill = `AgeGroup`)) +
+  geom_density(alpha = 0.5) +
+  facet_grid(`AgeGroup` ~ .) +
+  labs(title = "Density Plot of Total Costs per Age-Group Bucket", x = "Total Costs", y = "Density")
+
+gg + 
+  scale_x_continuous(limits = c(0, 35000)) +
+  scale_y_continuous(labels = scales::number_format(scale = 1e-3)) +
+  labs(title = "Density Plot of Total Costs per Age-Group Bucket", x = "Total Costs", y = "Density (in thousands)") +
+  theme_minimal()
+```
+
+# Payment Visualizations {background="#D2B48C"}
+
+## Pie Chart of Payment Type
+
+```{r}
+par(mar = c(5, 4, 4, 2) + 0.1)
+
+
+cleaned_data$`PaymentTypology1` <- as.factor(cleaned_data$`PaymentTypology1`)
+payments <- table(cleaned_data$`PaymentTypology1`)
+pie(payments, main = "Payment Type Distribution", col = rainbow(length(payments)), labels = NA)
+legend(1, 1, 1, legend = levels(cleaned_data$`PaymentTypology1`), fill = rainbow(length(payments)), cex = 0.7)
+
+```
+
+## Pie Charts of Payment Type by Race
+
+```{r Pie Charts of Payment Type by Race}
+library(ggplot2)
+library(gridExtra)
+library(patchwork)
+
+
+paymentTypeAndRaceQ <- dbSendQuery(dcon, "
+                                    SELECT Race, PaymentTypology1 FROM '2013data' WHERE Race != 'Unknown';")
+paymentTypeAndRaceDF <- dbFetch(paymentTypeAndRaceQ, -1)
+dbClearResult(paymentTypeAndRaceQ)
+#str(paymentTypeAndRaceDF)
+
+pie_charts <- lapply(unique(paymentTypeAndRaceDF$Race), function(race) {
+  data_subset <- subset(paymentTypeAndRaceDF, Race == race)
+  pie_chart <- ggplot(data_subset, aes(x = "", fill = PaymentTypology1)) +
+    geom_bar(width = 1) +
+    coord_polar("y") +
+    ggtitle(race) +
+    theme_void() +
+    scale_fill_brewer(palette = "Set3") +
+    theme(legend.position = ifelse(race == 'Black/African American', "left", "none"),
+          axis.text = element_text(size = 0),
+          legend.text = element_text(size = 5)) +
+    labs(fill = "Payment Type")
+  
+  return(pie_chart)
+})
+pie_charts[[1]] + pie_charts[[2]] + pie_charts[[3]] + plot_layout(ncol = 1)
+```
+
+# Analyzing Medicaid Recipients by Race and Borough in New York City {background="#D2B48C"}
+
+## Heat Map
+
+```{r Heat Map}
+query <- dbSendQuery(dcon, "
+  SELECT `HospitalCounty`, Race, COUNT(*) as count
+  FROM `2013data`
+  WHERE `HealthServiceArea` = 'New York City' 
+    AND Race IN ('Black/African American', 'White')
+  GROUP BY `HospitalCounty`, `Race`
+")
+
+
+data <- dbFetch(query, -1)
+
+ggplot(data, aes(x = `HospitalCounty`, y = `Race`, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "red") +
+  labs(title = "Number of Black/Other Race Individuals on Medicaid in NYC", 
+       x = "Borough", 
+       y = "Race", 
+       fill = "Count") +
+  theme_minimal()
+
+dbClearResult(query)
+
+# Query the data
+query <- dbSendQuery(dcon,"
+  SELECT `HospitalCounty`, Race, COUNT(*) as count
+  FROM `2013data`
+  WHERE `HealthServiceArea` = 'New York City' 
+    AND Race IN ('Black/African American', 'White')
+  GROUP BY `HospitalCounty`, `Race`
+"
+)
+data <- dbFetch(query, -1)
+
+dbClearResult(query)
+
+# Retrieve the NYC boroughs shape data and filter for the five boroughs
+options(tigris_use_cache = TRUE)
+
+# Retrieve the NYC boroughs shape data and filter for the five boroughs
+ny_counties <- tigris::counties(state = "NY", cb = TRUE) %>%
+  st_as_sf()
+
+
+nyc_boroughs <- ny_counties[ny_counties$NAME %in% c("Bronx", "Kings", "Manhattan", "Queens", "Richmond"), ]
+
+# Merge the data with the nyc_boroughs spatial object
+data_sf <- merge(nyc_boroughs, data, by.x = "NAME", by.y = "HospitalCounty")
+
+# Compute the centroids for the NYC boroughs for plotting circles
+data_sf$centroid <- st_centroid(st_geometry(data_sf))
+
+```
+
+## New York City Map
+
+```{r New York City Map}
+
+db_path <- "finalDB.db"
+con <- dbConnect(SQLite(), db_path)
+
+# Query the data
+query <- "
+  SELECT `HospitalCounty`, Race, COUNT(*) as count
+  FROM `2013data`
+  WHERE `HealthServiceArea` = 'New York City' 
+    AND Race IN ('Black/African American', 'White')
+  GROUP BY `HospitalCounty`, `Race`
+"
+data <- dbGetQuery(con, query)
+
+# Replace 'Manhattan' with 'New York' to match the shapefile data
+data$HospitalCounty <- gsub("Manhattan", "New York", data$HospitalCounty)
+
+# Disconnect from the database
+dbDisconnect(con)
+
+# Retrieve the NYC boroughs shape data and filter for the five boroughs
+options(tigris_use_cache = TRUE)
+ny_counties <- tigris::counties(state = "NY", cb = TRUE) %>% st_as_sf()
+
+nyc_boroughs <- ny_counties[ny_counties$NAME %in% c("Bronx", "Kings", "New York", "Queens", "Richmond"), ]
+
+# Merge the data with the nyc_boroughs spatial object
+data_sf <- merge(nyc_boroughs, data, by.x = "NAME", by.y = "HospitalCounty", all.x = TRUE)
+
+# Compute the centroids for the NYC boroughs for plotting circles
+data_sf$centroid <- st_centroid(data_sf)
+
+# Create a column with the X and Y coordinates of the centroids
+data_sf$X <- st_coordinates(data_sf$centroid)[, "X"]
+data_sf$Y <- st_coordinates(data_sf$centroid)[, "Y"]
+
+# Plotting side-by-side maps
+ggplot(data_sf) +
+  geom_sf(aes(fill = NAME), color = "grey60", size = 0.5) +
+  geom_point(aes(x = X, y = Y, size = count, color = Race), alpha = 0.7, show.legend = "point") +
+  facet_wrap(~Race, ncol = 2) +
+  scale_color_manual(values = c("Black/African American" = "blue", "White" = "red"), name = "Race") +
+  scale_size_continuous(name = "Count", breaks = c(10000,20000,30000,40000,50000)) +
+  labs(title = "Number of Black vs. White Individuals on Medicaid in NYC Boroughs",
+       subtitle = "Size of point indicates count, color indicates race") +
+  theme_minimal() +
+  theme(legend.position = "right", axis.title.x = element_blank(), axis.title.y = element_blank(),
+        axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks = element_blank())
+
+```
+
+# Human Body Economic Diagram (HBED) {style="font-size: 30px"}
+
+```{r}
+#| context: setup
+library(shiny)
+library(grid)
+library(gridExtra)
+library(scales)
+library(dplyr)
+library(RSQLite)
+library(readr)
+library(dplyr)
+library(xtable)
+
+dcon <- dbConnect(SQLite(), dbname = "finalDB.db", timeout = 10)
+query <- dbSendQuery(dcon,"
+  SELECT *
+  FROM '2021data';
+  ")
+  data_2021 <- dbFetch(query, -1)
+  dbClearResult(query)
+  query <- dbSendQuery(dcon,"
+  SELECT *
+  FROM '2013data';
+  ")
+  data_2013 <- dbFetch(query, -1)
+  dbClearResult(query)
+  cleaned_data <- data_2013
+```
+
+```{r}
+#| panel: sidebar
+titlePanel("Interactive Human Figure")
+  
+  # Dropdown menu for selecting body parts
+selectInput("bodyPart", "Select a Body Part:", choices = c("Total","Head", "Torso", "Chest"))
+selectInput("time", "Select a Time Period:",
+              choices = c("2013", "2021"))
+```
+
+```{r}
+#| panel: fill
+# Output plot created with grid graphics
+plotOutput("gridPlot", width = "600px", height = "500px")
+```
+
+```{r}
+#| context: server
+
+  # This function wraps existing grid drawing code
+  drawYourPlot <- function() {
+    if(input$time == "2013"){
+   cleaned_data <- data_2013
+}
+  if(input$time == "2021"){
+  cleaned_data <- data_2021
+}
+     
+  chest <- select(cleaned_data, APRMDCCode, TotalCharges, LengthofStay) %>% 
+  filter(APRMDCCode %in% c(16, 5, 8, 4, 9, 21))
+
+head <- select(cleaned_data, APRMDCCode, TotalCharges,LengthofStay) %>% 
+  filter(APRMDCCode %in% c(20, 2, 1, 3, 10, 18, 19, 23))
+
+stomach <- select(cleaned_data, APRMDCCode, TotalCharges, LengthofStay) %>% 
+  filter(APRMDCCode %in% c(6, 13, 7, 11, 12, 17, 15, 24))
+
+chest_count <- length(chest$APRMDCCode)
+head_count <- length(head$APRMDCCode)
+stomach_count <- length(stomach$APRMDCCode)
+total_count <- length(cleaned_data$APRDRGCode)
+
+draw_bed<- function(){
+#bed frame
+grid.draw(rectGrob(x = 0.80, y = 0.3, width = 0.375, height = 0.1, gp = gpar(fill = "brown3", col = "brown3", lwd = 2)))
+#mattress
+grid.draw(rectGrob(x = 0.80, y = 0.325, width = 0.35, height = 0.12, gp = gpar(fill = "gray", col = "gray", lwd = 2)))
+#pillow
+grid.draw(rectGrob(x = 0.675, y = 0.38, width = 0.125, height = 0.05, gp = gpar(fill = "gray", col = "darkgray", lwd = 2)))
+
+#left headboard
+grid.draw(rectGrob(x = 0.6, y = 0.35, width = 0.05, height = 0.35, gp = gpar(fill = "brown3", col = "brown3", lwd = 2)))
+
+#right headboard
+grid.draw(rectGrob(x = 0.975, y = 0.325, width = 0.05, height = 0.3, gp = gpar(fill = "brown3", col = "brown3", lwd = 2)))
+
+#blanket
+grid.draw(rectGrob(x = 0.85, y = 0.325, width = 0.2, height = 0.135, gp = gpar(fill = "lightpink", col = "pink2", lwd = 2)))
+
+grid.text("Average Charge per Day", x = 0.8, y = 0.5, just = "centre")
+
+if(input$bodyPart == "Head"){
+  grid.text(round(sum(head$TotalCharges)/sum(head$LengthofStay),2), x = 0.85, y = 0.33, just = "centre")
+}
+else if(input$bodyPart == "Chest"){
+   grid.text(round(sum(chest$TotalCharges)/sum(chest$LengthofStay), 2), x = 0.85, y = 0.33, just = "centre")
+}
+else if(input$bodyPart == "Torso"){
+   grid.text(round(sum(stomach$TotalCharges)/sum(stomach$LengthofStay), 2), x = 0.85, y = 0.33, just = "centre")
+  }
+}
+head_gp <- gpar(fill = "white")
+body_gp <- gpar(fill = "black")
+arms_gp <- gpar(fill = "white")
+legs_gp <- gpar(fill = "khaki")
+if(input$bodyPart == "Total"){
+grid.newpage()
+color_palette <- colorRampPalette(c("green", "red"))
+#Drawing the gradient key
+grad_key_height <- 0.5
+grad_key_width <- 0.05
+grad_key_x <- 0.7
+grad_key_y <- 0.5
+
+draw_vertical_rectangle <- function(x, y, width, height, gp = gpar()) {
+  grid.rect(x = x - width / 2, y = y - height / 2, width = width, height = height, gp = gp)
+}
+
+grid.rect(x = grad_key_x-.025, y = grad_key_y-0.005, width = grad_key_width, height = grad_key_height, gp = gpar(col = "black"))
+
+
+colors <- color_palette(100)
+for (i in 1:100) {
+  rect_gp <- gpar(fill = colors[i], col = NA)
+  y_pos <- grad_key_y - (grad_key_height / 2) + ((i - 1) / 100) * grad_key_height
+  draw_vertical_rectangle(x = grad_key_x, y = y_pos, width = grad_key_width, height = grad_key_height / 100, gp = rect_gp)
+}
+# Add labels to the gradient key
+grid.text("$", x = grad_key_x-0.015, y = grad_key_y - (grad_key_height / 2) - 0.02, just = "centre")
+grid.text("$$$", x = grad_key_x-0.015, y = grad_key_y + (grad_key_height / 2) + 0.02, just = "centre")
+grid.text("Costs", x = grad_key_x-0.015, y = grad_key_y + (grad_key_height / 2) + 0.1, just = "centre")
+
+
+
+get_color <- function(count, max_count) {
+  # Assuming 'color_palette' is a function or vector of colors that returns a color based on the index
+  normalized_count <- count/max_count
+  colors <- colorRampPalette(c("green", "yellow", "orange", "orange", "red"))(100)  # Blue for less, Red for more
+  color_index <- max(1, ceiling(normalized_count*100))
+  return(colors[color_index])
+}
+draw_circle <- function(x, y, radius, gp = gpar()) {
+  grid.circle(x = x, y = y, r = radius, gp = gp)
+}
+
+
+
+max_group_cost <- max(mean(head$TotalCharges), mean(chest$TotalCharges), mean(stomach$TotalCharges))
+head_count_gp <- gpar(fill = get_color(mean(head$TotalCharges), max_group_cost))
+chest_count_gp <- gpar(fill = get_color(mean(chest$TotalCharges), max_group_cost))
+stomach_count_gp <- gpar(fill = get_color(mean(stomach$TotalCharges), max_group_cost))
+
+draw_vertical_rectangle(x = 0.3, y = 0.75, width = 0.1, height = 0.35, gp = arms_gp) # this is neck
+draw_circle(x = 0.25, y = 0.78, radius = 0.11, gp = head_gp) # this is head
+draw_vertical_rectangle(x = 0.35, y = 0.65, width = 0.2, height = 0.35, gp = body_gp) # this is body
+draw_vertical_rectangle(x = 0.15, y = 0.65, width = 0.05, height = 0.35, gp = arms_gp) # this is left arm
+
+draw_circle(0.25,0.78, (head_count/total_count)/10, head_count_gp)
+draw_circle(0.30,0.60, (chest_count/total_count)/10, chest_count_gp)
+draw_circle(0.25,0.43, (stomach_count/total_count)/10, stomach_count_gp)
+
+
+draw_circle(0.85,.28, .03)
+draw_circle(0.85,.36, .04)
+draw_circle(0.85,.45, .045)
+draw_circle(0.85,.555, .0525)
+draw_circle(0.85,.68, .06)
+grid.text("Less", x = 0.85, y = grad_key_y - (grad_key_height / 2) - 0.02, just = "centre")
+grid.text("More", x = 0.85, y = grad_key_y + (grad_key_height / 2) + 0.02, just = "centre")
+grid.text("# of Cases", x = 0.85, y = grad_key_y + (grad_key_height / 2) + 0.1, just = "centre")
+
+
+
+
+draw_vertical_rectangle(x = 0.4, y = 0.65, width = 0.05, height = 0.35, gp = arms_gp) # this is right arm
+draw_vertical_rectangle(x = 0.25, y = 0.35, width = 0.1, height = 0.3, gp = legs_gp) # this is left leg
+draw_vertical_rectangle(x = 0.35, y = 0.35, width = 0.1, height = 0.3, gp = legs_gp) # this is right leg
+grid.ellipse(x = 0.25, y = 0.88, size = 9, ar = 4, angle = 0, gp = gpar(fill = "black"))
+}
+    # Here you would add additional grid drawing code based on the input$bodyPart
+    # For example:
+    else if (input$bodyPart == "Head") {
+      # Add grid elements specific to the head
+      grid.newpage()
+
+grid.circle(x = 0.25, y = 0.5, r = 0.35, gp = gpar(fill = "white", col = "black", lwd = 3))
+grid.lines(x = c(0.15), y = c(0,0.19), 
+           gp = gpar(col = "black", lwd = 3))
+grid.lines(x = c(0.35), y = c(0,0.19), 
+           gp = gpar(col = "black", lwd = 3))
+
+colors <- colorRampPalette(c("red", "yellow","green"))(1000)
+num_circles <- length(colors)
+
+# CIRCLE
+circle_radius <- 0.1
+x_center <- 0.80
+y_center <- 0.75
+
+# GRADIETN FOR CIRCLE
+for (i in 1:num_circles) {
+  color <- colors[i]
+  angle <- seq(0, pi, length.out = num_circles + 1)[i]
+  x <- x_center + circle_radius * cos(angle) 
+  y <- y_center + circle_radius * sin(angle) 
+  #grid.draw()
+  grid.circle(x = x, y = y, r = 50 / num_circles, gp = gpar(fill = color, col = color))
+}
+  #grid.rect(x = 0.3, y = 0.25, gp = gpar(fill = "white", col = "white"), width = 2, height = .5)
+  # LINES for APR Code
+# 4
+grid.lines(x = c(0.8, 0.9), y = c(0.7, .8), 
+           gp = gpar(col = "black", lwd = 3))
+
+grid.ellipse(x = 0.25, y = 0.85, size = 30, ar = 4, angle = 0, gp = gpar(fill = "black"))
+grid.text("APR Severity Level", x= 0.8, y = 0.95, just = "centre")
+draw_bed()
+
+
+    } else if (input$bodyPart == "Torso") {
+      # Add grid elements specific to the torso
+      grid.newpage()
+
+      draw_circle <- function(x, y, radius, gp = gpar()) {
+  grid.circle(x = x, y = y, r = radius, gp = gp)
+}
+draw_vertical_rectangle <- function(x, y, width, height, gp = gpar()) {
+  grid.rect(x = x - width / 2, y = y - height / 2, width = width, height = height, gp = gp)
+}
+draw_vertical_rectangle(x = 0.45, y = 0.95, width = 0.4, height = 0.6, gp = body_gp) # this is body
+draw_vertical_rectangle(x = 0.25, y = 0.35, width = 0.2, height = 0.4, gp = legs_gp) # this is left leg
+draw_vertical_rectangle(x = 0.45, y = 0.35, width = 0.2, height = 0.4, gp = legs_gp) # this is right leg
+
+
+colors <- colorRampPalette(c("red", "yellow","green"))(1000)
+num_circles <- length(colors)
+
+# CIRCLE
+circle_radius <- 0.1
+x_center <- 0.80
+y_center <- 0.75
+
+# GRADIETN FOR CIRCLE
+for (i in 1:num_circles) { 
+  color <- colors[i]
+  angle <- seq(0, pi, length.out = num_circles + 1)[i]
+  x <- x_center + circle_radius * cos(angle) 
+  y <- y_center + circle_radius * sin(angle) 
+  grid.circle(x = x, y = y, r = 50 / num_circles, gp = gpar(fill = color, col = color))
+}
+# LINES for APR Code
+
+  # 2
+grid.lines(x = c(0.75, .8), y = c(0.85, .7), 
+           gp = gpar(col = "black", lwd = 3))
+
+grid.text("APR Severity Level", x= 0.8, y = 0.95, just = "centre")
+draw_bed()
+    } else if (input$bodyPart == "Chest") {
+      # Add grid elements specific to the chest
+      grid.newpage()
+draw_circle <- function(x, y, radius, gp = gpar()) {
+  grid.circle(x = x, y = y, r = radius, gp = gp)
+}
+draw_vertical_rectangle <- function(x, y, width, height, gp = gpar()) {
+  grid.rect(x = x - width / 2, y = y - height / 2, width = width, height = height, gp = gp)
+}
+draw_vertical_rectangle(x = 0.4, y = 0.55, width = 0.3, height = 0.6, gp = body_gp) # this is body
+draw_vertical_rectangle(x = 0.10, y = 0.55, width = 0.05, height = 0.4, gp = arms_gp) # this is left arm
+draw_vertical_rectangle(x = 0.45, y = 0.55, width = 0.05, height = 0.4, gp = arms_gp) # this is right arm
+
+
+colors <- colorRampPalette(c("red", "yellow","green"))(1000)
+num_circles <- length(colors)
+
+# CIRCLE
+circle_radius <- 0.1
+x_center <- 0.80
+y_center <- 0.75
+
+# GRADIENT FOR CIRCLE
+for (i in 1:num_circles) { 
+  color <- colors[i]
+  angle <- seq(0, pi, length.out = num_circles + 1)[i]
+  x <- x_center + circle_radius * cos(angle) 
+  y <- y_center + circle_radius * sin(angle) 
+  grid.circle(x = x, y = y, r = 50 / num_circles, gp = gpar(fill = color, col = color))
+}
+# LINES for APR Code
+#3
+grid.lines(x = c(0.8, .85), y = c(0.7, .85), 
+           gp = gpar(col = "black", lwd = 3))
+
+grid.text("APR Severity Level", x= 0.8, y = 0.95, just = "centre")
+draw_bed()
+    }
+  }
+  
+  # Reactive plot output based on the selection
+  output$gridPlot <- renderPlot({
+    drawYourPlot()
+  })
+
+
+chest <- select(cleaned_data, APRMDCCode, TotalCharges) %>% 
+  filter(APRMDCCode %in% c(16, 5, 8, 4, 9, 21))
+
+head <- select(cleaned_data, APRMDCCode, TotalCharges) %>% 
+  filter(APRMDCCode %in% c(20, 2, 1, 3, 10, 18, 19, 23))
+
+stomach <- select(cleaned_data, APRMDCCode, TotalCharges) %>% 
+  filter(APRMDCCode %in% c(6, 13, 7, 11, 12, 17, 15, 24))
+
+chest_count <- length(chest$APRMDCCode)
+head_count <- length(head$APRMDCCode)
+stomach_count <- length(stomach$APRMDCCode)
+total_count <- length(cleaned_data$APRDRGCode)
+```
+
+# Conclusion {style="font-size: 20"}
+
+-   Disparities are examined on the basis of Race and Age
+-   Between 2013 and 2021, costs and charges have significantly risen
+-   Individuals who are Black/African American or from Other Races may not be receiving equitable healthcare
+-   Large Amounts of Minorities Dependent on Government Programs
+
+# Resources
+
+2013 Dataset:
+
+[https://www.health.ny.gov/statistics/vital_statistics/2013/](https://www.health.ny.gov/statistics/vital_statistics/2013/https://www.health.ny.gov/statistics/vital_statistics/2021/)
+
+2021 Dataset:
+
+[https://www.health.ny.gov/statistics/vital_statistics/2021/](https://www.health.ny.gov/statistics/vital_statistics/2013/https://www.health.ny.gov/statistics/vital_statistics/2021/)
