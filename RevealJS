@@ -4,13 +4,16 @@ subtitle: "STAT 405 Final Project"
 author: Krish Kumar, Abel Limachi, Austin Tran, Joel Villarino
 format:
   revealjs: 
+    transition: slide
+    background-transition: fade
+    center: true
     # embed-resources: true
     slide-number: true
     chalkboard: 
       buttons: false
     preview-links: auto
     css: styles.css
-    footer: STAT 405 - Fall 2023
+    footer: STAT 405 - Fall 2023 (Kumar, Limachi, Tran, Villarino)
 server: shiny
 ---
 
@@ -53,58 +56,57 @@ Patient Data from the State of New York were aggregated in this dataset from the
 
 ::: columns
 ::: {.column width="50%"}
-::: {style="font-size:15px"}
+::: {style="font-size:16px"}
+-   APR Severity of Illness Code
+-   APR Severity of Illness
 -   Health Service Area
-
 -   Hospital County
-
--   Operating Certificate Number
-
--   Facility ID, Facility Name
-
--   Age Group, Zip Code (3 digit)
-
+-   Age Group
 -   Gender
-
 -   Race
-
 -   Ethnicity
-
 -   Length of Stay
-
--   Type of Admission
-
--   Patient Disposition
-
--   Discharge Year
-
--   CCS Diagnosis Code
-
--   CCS Diagnosis Description
-
--   CCS Procedure Code
+-   Total Charges
+-   Total Costs
+-   Payment Typology
 :::
 :::
 
 ::: {.column width="50%"}
-::: {style="font-size:15px"}
+::: {style="font-size:16px"}
 -   CCS Procedure Description
--   APR DRG Code
--   APR DRG Description
+-   CCS Diagnosis Code
+-   CCS Diagnosis Description
+-   CCS Procedure Code
 -   APR MDC Code
 -   APR MDC Description
--   APR Severity of Illness Code
--   APR Severity of Illness
+-   APR DRG Code
+-   APR DRG Description
 -   APR Risk of Mortality
--   APR Medical Surgical Description
--   Payment Typology
--   Payment Typology
--   Birth Weight,
 -   Abortion Edit Indicator
 -   Emergency Department
+-   Type of Admission
+-   Facility ID
+-   Facility Name
+-   Zip Code (3 digit)
+:::
+:::
+:::
+
+## Variable Analysis 
+
+::: {style="font-size:25px"}
+::: incremental
+-   APR Severity of Illness
+-   Hospital County
+-   Age Group
+-   Gender
+-   Race
+-   Ethnicity
+-   Length of Stay
 -   Total Charges
 -   Total Costs
-:::
+-   Payment Typology
 :::
 :::
 
@@ -119,8 +121,8 @@ SELECT Race, APRSeverityofIllnessCode FROM '2013data';
 IllnessCodes <- dbFetch(query, -1)
 dbClearResult(query)
 
-waffle_data1 <- data.frame(count = table(IllnessCodes$APRSeverityofIllnessCode[IllnessCodes$Race == "Black/African American"])/2500)
-waffle_data2 <- data.frame(count = table(IllnessCodes$APRSeverityofIllnessCode[IllnessCodes$Race == "White"])/5000)
+waffle_data1 <- data.frame(count = table(IllnessCodes$APRSeverityofIllnessCode[IllnessCodes$Race == "Black/African American"])/2480)
+waffle_data2 <- data.frame(count = table(IllnessCodes$APRSeverityofIllnessCode[IllnessCodes$Race == "White"])/5050)
 
 layout(matrix(c(1, 2), nrow = 1))
 
@@ -164,7 +166,7 @@ ggplot(subsetted_data, aes(x = factor(`HealthServiceArea`), y = `APRSeverityofIl
 
 ## Bar Charts of Total Charge for Pregnant Women for Race (2013 & 2021)
 
-```{r}
+```{r, .center}
 library(ggplot2)
 library(patchwork)
 
@@ -698,4 +700,17 @@ total_count <- length(cleaned_data$APRDRGCode)
 
 # Conclusion {style="font-size: 20"}
 
+-   Disparities are examined on the basis of Race and Age
+-   Between 2013 and 2021, costs and charges have significantly risen
+-   Individuals who are Black/African American or from Other Races may not be receiving equitable healthcare
+-   Large Amounts of Minorities Dependent on Government Programs
+
 # Resources
+
+2013 Dataset:
+
+[https://www.health.ny.gov/statistics/vital_statistics/2013/](https://www.health.ny.gov/statistics/vital_statistics/2013/https://www.health.ny.gov/statistics/vital_statistics/2021/)
+
+2021 Dataset:
+
+[https://www.health.ny.gov/statistics/vital_statistics/2021/](https://www.health.ny.gov/statistics/vital_statistics/2013/https://www.health.ny.gov/statistics/vital_statistics/2021/)
