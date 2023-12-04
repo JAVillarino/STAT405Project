@@ -1,0 +1,402 @@
+---
+title: "Healthcare Insights and Sociodemographic Analysis of New York: A Comprehensive Analysis of Patient Records in 2013 and 2021"
+format: pdf
+author: Abel Limachi, Austin Tran, Joel Villarino, and Krish Kumar (Group 3)
+editor: visual
+fontsize: 10pt
+geometry: margin = 1in
+---
+
+```{r, warning = FALSE, message = FALSE}
+#| echo: false
+library(RSQLite)
+library(readr)
+library(dplyr)
+library(xtable)
+
+dcon <- dbConnect(SQLite(), dbname = "finalDB.db", timeout = 10)
+```
+
+## Introduction
+
+In the context of the ever-evolving landscape of healthcare, our choice of dataset stems from the pressing need to delve into an in-depth analysis of the heazlthcare dynamics prevailing in today's society. New York, being one of the most densely populated states in the United States, presents a unique microcosm of diverse populations and a wide spectrum of urban and rural healthcare challenges. Motivated by the significance of understanding these complexities, our research group has selected a comprehensive dataset encompassing patient records, representing healthcare interactions across various hospitals throughout New York.
+
+The following project contains different visualizations and statistics that will provide you more information on the different social and economic factors associated with patients in the state of New York in 2013 and through 2021.
+
+This dataset contains a wide range of healthcare-related information. It includes basic patient demographics like age, gender, race, and ethnicity; clinical data such as diagnosis and procedure codes, severity of illness, risk of mortality, and specific healthcare indicators like abortion edit and emergency department usage. Additionally, it covers financial and administrative aspects including total charges, costs, payment typology, and facility-specific information like facility ID, name, and location (represented by a 3-digit zip code). In our analysis of the dataset, we focused on specific key elements: APR Severity of Illness, Hospital County, Age Group, Gender, Race, Ethnicity, Length of Stay, Total Charges, Total Costs, and Payment Typology. These components provide a comprehensive overview of patient demographics, clinical severity, financial aspects, and hospital location, crucial for understanding healthcare dynamics and outcomes.
+
+## Primary Dataset: Patient Records from 2013
+
+The primary dataset that we used was obtained from the New York State Department of Health, which is the official health representative department of the state.
+
+The dataset consists of a collection of 2,428,905 records, providing us with an extensive amount of data to work with. This rich dataset spans a spectrum of information, including patient demographics, detailed medical records, financial aspects related to their hospitalization, and critical contextual information pertinent to each patient's stay. This extensive dataset holds immense potential for generating compelling visualizations and conducting statistical analyses, offering valuable insights into the intricacies of the New York healthcare system while also providing broader insights that can contribute to the understanding of healthcare systems more generally.
+
+## Secondary Dataset: Patient Records from 2021
+
+The secondary dataset, like the primary one, was also obtained from the New York State Department of Health, focusing on the year 2021. This dataset had 2,493,323 records for use. The rationale for selecting this dataset is twofold:
+
+Firstly, it allows us to track and analyze the changes in patient records across an eight-year period, offering a longitudinal perspective on the evolving healthcare landscape in New York. This longitudinal approach is crucial for understanding trends, shifts in demographic patterns, and changes in healthcare delivery and outcomes over time. 
+
+Secondly, and perhaps more importantly, the year 2021 stands as a significant historical marker due to the global COVID-19 pandemic. The pandemic has had profound and far-reaching impacts on healthcare systems worldwide, and New York was one of the epicenters of this crisis. By comparing the 2013 and 2021 datasets, we can gain invaluable insights into how the pandemic has reshaped various aspects of healthcare, including patient demographics, disease prevalence, healthcare utilization patterns, and the overall strain on the healthcare system. This comparison offers a unique opportunity to assess the resilience and adaptability of the New York healthcare system in the face of one of the most significant public health challenges of the century.
+
+## **Exploration:**
+
+The purpose of our exploration was to understand and contextualize the large primary dataset and investigate any trends that might exhibit potential for inequality or disparity in the healthcare system. We did this by examining a few different factors: differences in severity of illness data, disparities in charges and costs, payment typology differences, and analyzing Medicare and Medicaid recipients.
+
+We first wanted to ground our analysis in an important part of our dataset which was exploration on patients and their reported severity of illness.
+
+# Severity of Illness
+
+## Plot 1: Waffle Plot of Severity of Illness by Race
+
+```{r, fig.width = 8, fig.height = 10, message = FALSE}
+#| echo: false
+library(waffle)
+library(patchwork)
+query <- dbSendQuery(dcon,"
+SELECT Race, APRSeverityofIllnessCode FROM '2013data';
+                     ")
+IllnessCodes <- dbFetch(query, -1)
+dbClearResult(query)
+
+waffle_data1 <- data.frame(count = table(IllnessCodes$APRSeverityofIllnessCode[IllnessCodes$Race == "Black/African American"])/2500)
+waffle_data2 <- data.frame(count = table(IllnessCodes$APRSeverityofIllnessCode[IllnessCodes$Race == "White"])/5000)
+
+layout(matrix(c(1, 2), nrow = 1))
+
+plot1 <- waffle(waffle_data1, rows = 8, size = .5, 
+            colors = c("#FFEDA0", "#FEB24C", "#FC4E2A", "#BD0026"), title = "Black/African Americans")
+plot2 <- waffle(waffle_data2, rows = 8, size = .5, 
+            colors = c("#FFEDA0", "#FEB24C", "#FC4E2A", "#BD0026"), title = "White")
+
+arrange.plots <- plot1 + theme(plot.title = element_text(size = 10)) + plot2 + theme(plot.title = element_text(size = 10))
+arrange.plots
+```
+
+```{=tex}
+\begin{center}
+Figure 1: Waffle Plots Depicting Frequencies of APR Codes 
+\end{center}
+```
+Our first plot that we used to dive into our dataset was the above Waffle Plot, which provides an insightful visualization of the severity of illness distributed by race, focusing on Black/African American and White populations.
+
+As we can see, the plot is divided into two sections, each representing the two racial groups mentioned. Within each section, the squares are color-coded to represent four levels of the APR severity codes, ranging from level 1 (mild, such as a common cold), indicated by the lightest color, to level 4 (severe, such as life-threatening illness), indicated by the darkest color. Across the two demographics, we observe a relatively similar distribution of APR severity codes. However, it appears that white patients, on average, has a higher concentration in severity codes level 3 and 4, which leads to these patients receiving more dire and prioritized care. As such, this raises concerns over equality: we want to ensure that patients across the board regardless of race, socioeconomic status, and other demographics receive equal care without biases.
+
+Overall, this waffle plot serves not only as a tool to visualize data but also as a starting point for deeper discussions about health equity and the structural challenges faced by different racial groups. It's a call to action for policymakers, healthcare providers, and communities to address these disparities head-on.
+
+With this we wanted to analyze and see if location was a potential indicator for a difference in severity of illness, this then lead us to create our next visualization which is the violin plot that compares the urban area of New York City and the rural area of Western New York.
+
+## Plot 2: Violin Plot Comparing New York City and Western New York's Severity of Illness
+
+```{r, fig.width = 8, warning = FALSE}
+#| echo: false
+query <- dbSendQuery(dcon,"
+SELECT *
+FROM '2013data';
+")
+cleaned_data <- dbFetch(query, -1)
+dbClearResult(query)
+subsetted_data <- cleaned_data[cleaned_data$`HealthServiceArea` %in% c("New York City", "Western NY"), ]
+
+# Load the ggplot2 library
+library(ggplot2)
+
+# Create a violin plot for APR Severity of Illness Code
+ggplot(subsetted_data, aes(x = factor(`HealthServiceArea`), y = `APRSeverityofIllnessCode`, fill = `HealthServiceArea`)) +
+  geom_violin() +
+  labs(
+    x = "Health Service Area",
+    y = "APR Severity of Illness Code",
+    fill = "Health Service Area",
+    title = "Distribution of APR Severity of Illness Code in Patients in New York Health Service Areas"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+```{=tex}
+\begin{center}
+Figure 2: NYC and Western NY Severity of Illness Comparsion
+\end{center}
+```
+Figure 2 delves into a detailed breakdown of hospital patients, distinguishing between those originating from New York City (NYC) and Western New York (WNY). The focus is on the distribution of patients' APR severity codes, measured on a 1 to 4 scale (1 being mild, 2 being moderate, 3 being serious, and 4 being extreme). Notably, the violin plot reveals a higher frequency of APR severity code 2 assignments for patients from NYC compared to WNY. In the context of healthcare equality, this is a potential area of concern. In the state of New York, the areas outside of NYC are significantly more rural/suburban than NYC. Likely, the distance to the nearest hospital for residents in WNY is higher than for those who live in NYC. There being a significantly lower proportion of patients with APR severity 2 from WNY suggests that patients might not be going to the hospital unless they have severe symptoms. This could lead to many WNY residents not catching certain illnesses early when compared to NYC residents, furthering an already existing divide when it comes to healthcare access between NYC and the rest of the state..
+
+# Disparities in Charges and Costs
+
+## Plot 3: Barplots of Average Total Charges by Race 2013 vs 2021
+
+```{r, fig.height = 5, fig.width = 5}
+#| echo: false
+library(ggplot2)
+library(patchwork)
+
+
+pregnant_womenQ <- dbSendQuery(dcon, "
+    SELECT Race, TotalCharges
+    FROM '2013data'
+    WHERE APRMDCCode == 14 OR APRMDCCode == 15;")
+pregnant_womenDF = dbFetch(pregnant_womenQ, -1)
+dbClearResult(pregnant_womenQ)
+
+plot_race2013 <- ggplot(pregnant_womenDF) + 
+  aes(x = Race, y = TotalCharges) +
+  stat_summary(fun = "mean", geom = "bar", fill = "salmon") +  # Calculate and plot averages
+  labs(x = "Race", y = "Average Total Charges", title = "Average Total Charge by Race in 2013") +  # Customize axis labels
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(size = 7))  # Rotate x-axis labels for
+
+
+pregnant_womenQ2 <- dbSendQuery(dcon, "
+    SELECT Race, TotalCharges
+    FROM '2021data'
+    WHERE APRMDCCode == 14 OR APRMDCCode == 15 AND Race != 'Multi-racial';")
+pregnant_womenDF2 = dbFetch(pregnant_womenQ2, -1)
+dbClearResult(pregnant_womenQ2)
+  
+plot_race2021 <- ggplot(pregnant_womenDF2) + 
+  aes(x = Race, y = TotalCharges) +
+  stat_summary(fun = "mean", geom = "bar", fill = "violet") +  # Calculate and plot averages
+  labs(x = "Race", y = "Average Total Charges", title = "Average Total Charge by Race in 2021") +  # Customize axis labels
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(size = 7))  # Rotate x-axis labels for
+
+
+combined_plot_race <- plot_race2013 + plot_race2021
+combined_plot_race
+
+```
+
+```{=tex}
+\begin{center}
+Figure 3: Barplots of Average Total Charges by Race in 2013 and 2021
+\end{center}
+```
+In figure 3, the bar plot illustrates a compelling contrast in average total charges for hospital care among different racial groups. Notably, it highlights that individuals who identify as Black and those categorized under the "Other Races" group experience significantly higher average total charges compared to their White counterparts for their pregnancy charges. This disparity in healthcare costs sheds light on the existing inequalities within the healthcare system, prompting a critical examination of the factors contributing to these disparities and the potential need for targeted interventions to address the especially for marginalized populations of not just women on the basis of gender but also for race as well. We see that in 2021, post the COVID-19 pandemic, this disparity between average total charges of Black patients and White patients increased, showing that the pandemic potentially increased already present disparity in healthcare.
+
+## Plot 4: Facet Density Plots of Total Cost per Age-Group Buckets
+
+```{r warning = FALSE, fig.width = 7, fig.height = 5}
+#| echo: false
+data_set <- read_csv("Hospital_Inpatient_Discharges__SPARCS_De-Identified___2013.csv",show_col_types = FALSE)
+
+clean <- na.omit(data_set)
+
+gg <- ggplot(clean, aes(x = `Total Costs`, y = ..density.., fill = `Age Group`)) +
+  geom_density(alpha = 0.5) +
+  facet_grid(`Age Group` ~ .) +
+  labs(title = "Density Plot of Total Costs per Age-Group Bucket", x = "Total Costs", y = "Density")
+
+gg + 
+  scale_x_continuous(limits = c(0, 35000)) +
+  scale_y_continuous(labels = scales::number_format(scale = 1e-3)) +
+  labs(title = "Density Plot of Total Costs per Age-Group Bucket", x = "Total Costs", y = "Density (in thousands)") +
+  theme_minimal()
+```
+
+```{=tex}
+\begin{center}
+
+Figure 4: Density Plots of Total Costs per Age-Groups
+
+\end{center}
+```
+The density plots detailing Total Costs across different age groups --- 0-17, 18-29, 30-49, 50-69, and 70 or older --- illustrate a clear correlation between age and healthcare expenditure. For the younger cohorts (0-17 and 18-29), the costs are low and show little variation, reflecting the typically good health of these age groups and infrequent need for extensive healthcare. As we move into the middle-aged groups (30-49 and 50-69), the plots expand, indicating an increase in both the range and average of healthcare costs. This likely corresponds to the gradual appearance of chronic illnesses and the need for more regular medical care.
+
+The most dispersed plot is seen in the 70+ group, signaling the highest variability and cost of healthcare. This suggests the presence of multiple, more complex health issues that are common in older age, requiring more frequent and often more expensive medical interventions.
+
+These plots underscore the impact of aging on healthcare costs and highlight the importance of proactive health measures. There is a clear indication that early intervention and preventive care could significantly affect the healthcare system's financial demands, suggesting that investing in health education and preventive measures early on could mitigate the higher costs associated with aging populations. The analysis advocates for policy adjustments that address the escalating costs in the healthcare system, ensuring that as individuals age, they are supported by a robust and responsive healthcare infrastructure.
+
+# Payment Visualizations
+
+## Plot 5: Pie Charts of Payment Type
+
+```{r, fig.height = 4, fig.width = 9}
+#| echo: false
+par(mar = c(5, 4, 4, 2) + 0.1)
+
+
+cleaned_data$`PaymentTypology1` <- as.factor(cleaned_data$`PaymentTypology1`)
+payments <- table(cleaned_data$`PaymentTypology1`)
+pie(payments, main = "Payment Type Distribution", col = rainbow(length(payments)), labels = NA)
+legend(1, 1, 1, legend = levels(cleaned_data$`PaymentTypology1`), fill = rainbow(length(payments)), cex = 0.7)
+
+```
+
+```{=tex}
+\begin{center}
+Figure 5: Pie Chart of Payment Type 
+\end{center}
+```
+Our analysis delves into the intricacies of healthcare payments, as depicted by a comprehensive pie chart reflecting various payment types utilized by patients for hospital services. The chart initially reveals a dominance of Medicaid, Medicare, and private health insurance, indicating these as the predominant payment methods. Notably, Medicaid occupies a significant portion, underscoring its role in providing for individuals with limited financial resources. Medicare's substantial share reflects its critical support for the elderly and certain younger individuals with disabilities. The prominence of private health insurance highlights its importance in the American healthcare landscape, often associated with employment benefits.
+
+However, the distribution also brings attention to the smaller yet significant segments such as Managed Care and Self-Pay. The Managed Care slice suggests a structured approach to healthcare, emphasizing preventive measures and cost-efficiency, while the Self-Pay category may point to gaps in healthcare coverage or a choice for those who may not want to use insurance. The presence of diverse payment sources such as Federal/State/Local/VA and the Department of Corrections indicates the healthcare system's reach, covering veterans, federal employees, and incarcerated individuals.
+
+Building on the diverse payment types identified, we further explore the breakdown by race to uncover potential disparities. Plot 6 segments the payment types for White, Black/African American, and Other Race groups, offering a more granular view that may reflect underlying socioeconomic patterns. This breakdown by race could provide critical insights into the equity of healthcare coverage and the financial barriers different racial groups face within the healthcare system.
+
+## Plot 6: Pie Charts of Payment Type by Race
+
+```{r, message = FALSE}
+#| echo: false
+library(ggplot2)
+library(gridExtra)
+library(patchwork)
+
+
+paymentTypeAndRaceQ <- dbSendQuery(dcon, "
+                                    SELECT Race, PaymentTypology1 FROM '2013data' WHERE Race != 'Unknown';")
+paymentTypeAndRaceDF <- dbFetch(paymentTypeAndRaceQ, -1)
+dbClearResult(paymentTypeAndRaceQ)
+#str(paymentTypeAndRaceDF)
+
+pie_charts <- lapply(unique(paymentTypeAndRaceDF$Race), function(race) {
+  data_subset <- subset(paymentTypeAndRaceDF, Race == race)
+  pie_chart <- ggplot(data_subset, aes(x = "", fill = PaymentTypology1)) +
+    geom_bar(width = 1) +
+    coord_polar("y") +
+    ggtitle(race) +
+    theme_void() +
+    scale_fill_brewer(palette = "Set3") +
+    theme(legend.position = ifelse(race == 'Black/African American', "left", "none"),
+          axis.text = element_text(size = 0),
+          legend.text = element_text(size = 5)) +
+    labs(fill = "Payment Type")
+  
+  return(pie_chart)
+})
+pie_charts[[1]] + pie_charts[[2]] + pie_charts[[3]] + plot_layout(ncol = 1)
+```
+
+```{=tex}
+\begin{center}
+Figure 6: Pie Charts on Payment Type by Race
+\end{center}
+```
+The pie charts shed light on a stark disparity in healthcare payment types across racial lines. They show that White patients are more likely to use Medicare, which often correlates with a more secure financial status and access to retirement benefits. Meanwhile, Black/African American individuals and those from other racial backgrounds have a higher reliance on Medicaid, indicating lower income levels and less access to private or employer-sponsored health insurance. These trends aren't just numbers; they reflect real-world inequalities where minority groups often have less access to quality healthcare. The data doesn't just highlight a disparity; it points to the need for policies that address the economic and racial factors that limit healthcare options for some groups. It's an important piece of the puzzle for creating a more equitable healthcare system where coverage and quality care are accessible to all, regardless of racial background or economic standing.
+
+# Analyzing Medicaid Recipients by Race and Borough in New York City
+
+### Plot 7: New York City Medicaid Heat Map
+
+```{r, fig.width = 10}
+#| echo: false
+query <- dbSendQuery(dcon, "
+  SELECT `HospitalCounty`, Race, COUNT(*) as count
+  FROM `2013data`
+  WHERE `HealthServiceArea` = 'New York City' 
+    AND Race IN ('Black/African American', 'White')
+  GROUP BY `HospitalCounty`, `Race`
+")
+
+
+data <- dbFetch(query, -1)
+
+ggplot(data, aes(x = `HospitalCounty`, y = `Race`, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "red") +
+  labs(title = "Number of White and Black/Other Race Individuals on Medicaid in NYC", 
+       x = "Borough", 
+       y = "Race", 
+       fill = "Count") +
+  theme_minimal()
+```
+
+```{=tex}
+\begin{center}
+Figure 7: Heat Map of Patients on Medicare in  New York City Boroughs
+\end{center}
+```
+Building on the insights from Plot 6, which highlighted the distribution of healthcare payment types among different racial groups, our focus shifted to a more localized context---New York City. This targeted analysis allows us to dissect the intricate layers of Medicaid distribution by race within the city's diverse boroughs.
+
+In Plot 7, the heatmap provides a stark visualization of racial disparities across NYC boroughs. The variance in color intensity, from light to dark red, denotes the number of Medicaid recipients, revealing a pronounced concentration in Kings (Brooklyn), particularly among Black/African American individuals. This contrast is particularly noteworthy when compared to Manhattan, where a higher count of White individuals is evident. The heatmap's gradient effectively communicates the disparity in Medicaid dependence between these two populous boroughs. Meanwhile, Richmond (Staten Island) shows markedly lower numbers for both racial groups, hinting at different underlying socioeconomic factors at play. The Bronx and Queens present a more balanced distribution, suggesting a more equitable spread of Medicaid coverage across racial lines in these areas.
+
+### Plot 8: New York City Map Analysis
+
+```{r, fig.height = 6, fig.width = 7, message = FALSE, warning = FALSE}
+#| echo: false
+library(stringr)
+library(dplyr)
+library(grid)
+library(gridExtra)
+library(RSQLite)
+library(shiny)
+library(DBI)
+library(RSQLite)
+library(ggplot2)
+library(sf)
+library(waffle)
+library(patchwork)
+library(tigris)
+library(ggplot2)
+library(viridis)
+library(lubridate)
+library(sf)
+library(DBI)
+library(flextable)
+
+db_path <- "finalDB.db"
+con <- dbConnect(SQLite(), db_path)
+
+# Query the data
+query <- "
+  SELECT `HospitalCounty`, Race, COUNT(*) as count
+  FROM `2013data`
+  WHERE `HealthServiceArea` = 'New York City' 
+    AND Race IN ('Black/African American', 'White')
+  GROUP BY `HospitalCounty`, `Race`
+"
+data <- dbGetQuery(con, query)
+
+# Replace 'Manhattan' with 'New York' to match the shapefile data
+data$HospitalCounty <- gsub("Manhattan", "New York", data$HospitalCounty)
+
+# Disconnect from the database
+dbDisconnect(con)
+
+# Retrieve the NYC boroughs shape data and filter for the five boroughs
+options(tigris_use_cache = TRUE)
+ny_counties <- tigris::counties(state = "NY", cb = TRUE) %>% st_as_sf()
+
+nyc_boroughs <- ny_counties[ny_counties$NAME %in% c("Bronx", "Kings", "New York", "Queens", "Richmond"), ]
+
+# Merge the data with the nyc_boroughs spatial object
+data_sf <- merge(nyc_boroughs, data, by.x = "NAME", by.y = "HospitalCounty", all.x = TRUE)
+
+# Compute the centroids for the NYC boroughs for plotting circles
+data_sf$centroid <- st_centroid(data_sf)
+
+# Create a column with the X and Y coordinates of the centroids
+data_sf$X <- st_coordinates(data_sf$centroid)[, "X"]
+data_sf$Y <- st_coordinates(data_sf$centroid)[, "Y"]
+
+# Plotting side-by-side maps
+ggplot(data_sf) +
+  geom_sf(aes(fill = NAME), color = "grey60", size = 0.5) +
+  geom_point(aes(x = X, y = Y, size = count, color = Race), alpha = 0.7, show.legend = "point") +
+  facet_wrap(~Race, ncol = 2) +
+  scale_color_manual(values = c("Black/African American" = "blue", "White" = "red"), name = "Race") +
+  scale_size_continuous(name = "Count", breaks = c(10000,20000,30000,40000,50000)) +
+  labs(title = "Number of Black vs. White Individuals on Medicaid in NYC Boroughs",
+       subtitle = "Size of point indicates count, color indicates county",
+       fill = "Borough Name") + # Change the legend title for the fill aesthetic
+  theme_minimal() +
+  theme(legend.position = "right", axis.title.x = element_blank(), axis.title.y = element_blank(),
+        axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks = element_blank())
+
+```
+
+```{=tex}
+\begin{center}
+Figure 8: Map of Patients on Medicare in  New York City Boroughs
+\end{center}
+```
+Plot 8 deepens this exploration with a cartographic depiction that merges Medicaid data with the geographic layout of NYC. The boroughs are color-coded, and within each, circles of varying sizes represent the count of Medicaid recipients, with the color designating the race---blue for Black/African American and red for White. The visualization brings to light the sheer volume of Black/African American Medicaid beneficiaries in Brooklyn, as indicated by the dominance of the blue circles. In contrast, Manhattan's red circles point to a higher number of White individuals on Medicaid. This map is more than a visual aid; it encapsulates the demographic disparities in healthcare access and provides a spatial dimension to the quantitative data. For stakeholders, this map is a call to action, highlighting areas where healthcare policies and programs may need to be adjusted to address the specific needs of each borough's population, ensuring a more equitable healthcare system in one of the world's most diverse cities.
+
+In conclusion, the sequence of plots from our analysis paints a telling picture of the healthcare payment landscape in New York City, marked by significant racial and geographic disparities. The pie chart in Plot 6 laid the foundation, showing distinct payment behaviors among racial groups. This was the impetus for a deeper dive into the local context, where the heatmap of Plot 7 highlighted stark contrasts in Medicaid distribution across boroughs, with Kings (Brooklyn) and Manhattan exhibiting pronounced disparities between Black/African American and White populations, respectively. Plot 8's map provided a vivid geographical perspective, reinforcing these disparities with visual cues that emphasize the concentration of Medicaid recipients in specific boroughs. Together, these visualizations not only underscore the existing inequities in healthcare coverage but also underscore the need for targeted policy interventions.
+
+# Killer Plot
+
+## Human Body Economic Diagram
+
+# Conclusion
