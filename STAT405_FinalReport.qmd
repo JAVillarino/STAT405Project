@@ -88,7 +88,7 @@ With this we wanted to analyze and see if location was a potential indicator for
 
 ## Plot 2: Violin Plot Comparing New York City and Western New York's Severity of Illness
 
-```{r, fig.width = 8, warning = FALSE}
+```{r, fig.height = 4, fig.width = 8, warning = FALSE}
 #| echo: false
 query <- dbSendQuery(dcon,"
 SELECT *
@@ -123,11 +123,90 @@ Figure 2: NYC and Western NY Severity of Illness Comparsion
 ```
 Figure 2 delves into a detailed breakdown of hospital patients, distinguishing between those originating from New York City (NYC) and Western New York (WNY). The focus is on the distribution of patients' APR severity codes, measured on a 1 to 4 scale (1 being mild, 2 being moderate, 3 being serious, and 4 being extreme). Notably, the violin plot reveals a higher frequency of APR severity code 2 assignments for patients from NYC compared to WNY. In the context of healthcare equality, this is a potential area of concern. In the state of New York, the areas outside of NYC are significantly more rural/suburban than NYC. Likely, the distance to the nearest hospital for residents in WNY is higher than for those who live in NYC. There being a significantly lower proportion of patients with APR severity 2 from WNY suggests that patients might not be going to the hospital unless they have severe symptoms. This could lead to many WNY residents not catching certain illnesses early when compared to NYC residents, furthering an already existing divide when it comes to healthcare access between NYC and the rest of the state..
 
-# Disparities in Charges and Costs
+# Disparities In Charges and Costs
 
-## Plot 3: Barplots of Average Total Charges by Race 2013 vs 2021
+## Plot 3: Linear Regression Model Regarding Charges and Costs
 
-```{r, fig.height = 5, fig.width = 5}
+```{r, results='asis', warning=FALSE}
+#| echo: false
+query <- dbSendQuery(dcon,"
+SELECT *
+FROM '2013data';
+")
+cleaned_data <- dbFetch(query, -1)
+dbClearResult(query)
+
+# Renaming the column to 'Length of Stay' for the linear model
+names(cleaned_data)[names(cleaned_data) == "LengthofStay"] <- "Length of Stay"
+
+y <- cleaned_data$`TotalCharges`
+length_of_stay <- strtoi(cleaned_data$`Length of Stay`)
+
+# Set scipen to a large value to avoid scientific notation
+options(scipen = 999999999999)
+
+# Create a scatter plot
+plot(length_of_stay, y, xlab = "Length of Stay", main = "Price vs Length of Stay", ylab = "Price")
+
+# Fit the linear model
+lmfs <- lm(y ~ length_of_stay)
+
+# Add the regression line
+abline(lmfs, col = "RED")
+
+# Reset scipen to its default value after the plot
+options(scipen = 0)
+```
+
+```{=tex}
+\begin{center}
+Figure 3: Length of Stay on Price Regression Dotplot
+\end{center}
+```
+```{r, results='asis', message = FALSE, warning = FALSE, comment = FALSE}
+#| echo: false
+summary_lmfs <- summary(lmfs)
+# Assuming lmfs is your linear model
+summary_lmfs <- summary(lmfs)
+r_squared <- summary_lmfs$r.squared
+
+
+# Manually set the row names for the coefficients
+rownames(summary_lmfs$coefficients) <- c("Intercept", "Length of Stay")
+
+# Generate the table with xtable
+table_lmfs <- xtable::xtable(summary_lmfs$coefficients, caption = "Linear Model Summary")
+# Set column names for the table
+colnames(table_lmfs) <- c("Estimate", "Std. Error", "t value", "Pr(>|t|)")
+# Print the table w/ row names 
+print(table_lmfs, include.rownames = TRUE, comment = FALSE)
+
+```
+
+```{r, results='asis', message = FALSE, warning = FALSE}
+#| echo: false
+
+summary_lmfs <- summary(lmfs)
+
+# Extract R-squared value
+r_squared <- summary_lmfs$r.squared
+
+r_squared_df <- data.frame(`R^2` = r_squared)
+
+table_r_squared <- xtable::xtable(r_squared_df, caption = "Model R-Squared")
+
+print(table_r_squared, include.rownames = FALSE, 
+      sanitize.text.function = function(x){x}, comment = FALSE)
+
+```
+
+In our analysis of patient data for the state of New York in 2013, we conducted a linear regression to explore the impact of the length of stay on the associated price. The results revealed a statistically significant and strong positive relationship between these variables. The coefficient for length of stay that is calcualte din days was estimated at 6140.73 with a standard error of 6.622 and a remarkably high t-value of 927.39. This suggests that as the length of stay increases, there is a substantial increase in the price, a relationship supported by a p-value close to zero. The R-squared value of 0.55 indicates that approximately 55% of the price variation can be explained by the length of stay, demonstrating its relevance as a predictor. These findings provide important insights for healthcare management and policymaking, highlighting the need to consider and manage the cost implications of varying lengths of stay for New York state patients in 2013.
+
+However, this plot was the impetus to start seeing the interaction between total charges and costs and its relationship with other identifying factors of patients.
+
+## Plot 4: Barplots of Average Total Charges by Race 2013 vs 2021
+
+```{r, fig.height = 6, fig.width = 5}
 #| echo: false
 library(ggplot2)
 library(patchwork)
@@ -170,12 +249,12 @@ combined_plot_race
 
 ```{=tex}
 \begin{center}
-Figure 3: Barplots of Average Total Charges by Race in 2013 and 2021
+Figure 4: Barplots of Average Total Charges by Race in 2013 and 2021
 \end{center}
 ```
-In figure 3, the bar plot illustrates a compelling contrast in average total charges for hospital care among different racial groups. Notably, it highlights that individuals who identify as Black and those categorized under the "Other Races" group experience significantly higher average total charges compared to their White counterparts for their pregnancy charges. This disparity in healthcare costs sheds light on the existing inequalities within the healthcare system, prompting a critical examination of the factors contributing to these disparities and the potential need for targeted interventions to address the especially for marginalized populations of not just women on the basis of gender but also for race as well. We see that in 2021, post the COVID-19 pandemic, this disparity between average total charges of Black patients and White patients increased, showing that the pandemic potentially increased already present disparity in healthcare.
+In figure 4, the bar plot illustrates a compelling contrast in average total charges for hospital care among different racial groups. Notably, it highlights that individuals who identify as Black and those categorized under the "Other Races" group experience significantly higher average total charges compared to their White counterparts for their pregnancy charges. This disparity in healthcare costs sheds light on the existing inequalities within the healthcare system, prompting a critical examination of the factors contributing to these disparities and the potential need for targeted interventions to address the especially for marginalized populations of not just women on the basis of gender but also for race as well. We see that in 2021, post the COVID-19 pandemic, this disparity between average total charges of Black patients and White patients increased, showing that the pandemic potentially increased already present disparity in healthcare. We then wanted to start shifting our focus on looking at the age of patients.
 
-## Plot 4: Facet Density Plots of Total Cost per Age-Group Buckets
+## Plot 5: Facet Density Plots of Total Cost per Age-Group Buckets
 
 ```{r warning = FALSE, fig.width = 7, fig.height = 5}
 #| echo: false
@@ -198,7 +277,7 @@ gg +
 ```{=tex}
 \begin{center}
 
-Figure 4: Density Plots of Total Costs per Age-Groups
+Figure 5: Density Plots of Total Costs per Age-Groups
 
 \end{center}
 ```
@@ -210,7 +289,7 @@ These plots underscore the impact of aging on healthcare costs and highlight the
 
 # Payment Visualizations
 
-## Plot 5: Pie Charts of Payment Type
+## Plot 6: Pie Charts of Payment Type
 
 ```{r, fig.height = 4, fig.width = 9}
 #| echo: false
@@ -226,7 +305,7 @@ legend(1, 1, 1, legend = levels(cleaned_data$`PaymentTypology1`), fill = rainbow
 
 ```{=tex}
 \begin{center}
-Figure 5: Pie Chart of Payment Type 
+Figure 6: Pie Chart of Payment Type 
 \end{center}
 ```
 Our analysis delves into the intricacies of healthcare payments, as depicted by a comprehensive pie chart reflecting various payment types utilized by patients for hospital services. The chart initially reveals a dominance of Medicaid, Medicare, and private health insurance, indicating these as the predominant payment methods. Notably, Medicaid occupies a significant portion, underscoring its role in providing for individuals with limited financial resources. Medicare's substantial share reflects its critical support for the elderly and certain younger individuals with disabilities. The prominence of private health insurance highlights its importance in the American healthcare landscape, often associated with employment benefits.
@@ -235,7 +314,7 @@ However, the distribution also brings attention to the smaller yet significant s
 
 Building on the diverse payment types identified, we further explore the breakdown by race to uncover potential disparities. Plot 6 segments the payment types for White, Black/African American, and Other Race groups, offering a more granular view that may reflect underlying socioeconomic patterns. This breakdown by race could provide critical insights into the equity of healthcare coverage and the financial barriers different racial groups face within the healthcare system.
 
-## Plot 6: Pie Charts of Payment Type by Race
+## Plot 7: Pie Charts of Payment Type by Race
 
 ```{r, message = FALSE}
 #| echo: false
@@ -270,14 +349,14 @@ pie_charts[[1]] + pie_charts[[2]] + pie_charts[[3]] + plot_layout(ncol = 1)
 
 ```{=tex}
 \begin{center}
-Figure 6: Pie Charts on Payment Type by Race
+Figure 7: Pie Charts on Payment Type by Race
 \end{center}
 ```
 The pie charts shed light on a stark disparity in healthcare payment types across racial lines. They show that White patients are more likely to use Medicare, which often correlates with a more secure financial status and access to retirement benefits. Meanwhile, Black/African American individuals and those from other racial backgrounds have a higher reliance on Medicaid, indicating lower income levels and less access to private or employer-sponsored health insurance. These trends aren't just numbers; they reflect real-world inequalities where minority groups often have less access to quality healthcare. The data doesn't just highlight a disparity; it points to the need for policies that address the economic and racial factors that limit healthcare options for some groups. It's an important piece of the puzzle for creating a more equitable healthcare system where coverage and quality care are accessible to all, regardless of racial background or economic standing.
 
 # Analyzing Medicaid Recipients by Race and Borough in New York City
 
-### Plot 7: New York City Medicaid Heat Map
+## Plot 8: New York City Medicaid Heat Map
 
 ```{r, fig.width = 10}
 #| echo: false
@@ -304,14 +383,14 @@ ggplot(data, aes(x = `HospitalCounty`, y = `Race`, fill = count)) +
 
 ```{=tex}
 \begin{center}
-Figure 7: Heat Map of Patients on Medicare in  New York City Boroughs
+Figure 8: Heat Map of Patients on Medicare in  New York City Boroughs
 \end{center}
 ```
 Building on the insights from Plot 6, which highlighted the distribution of healthcare payment types among different racial groups, our focus shifted to a more localized context---New York City. This targeted analysis allows us to dissect the intricate layers of Medicaid distribution by race within the city's diverse boroughs.
 
-In Plot 7, the heatmap provides a stark visualization of racial disparities across NYC boroughs. The variance in color intensity, from light to dark red, denotes the number of Medicaid recipients, revealing a pronounced concentration in Kings (Brooklyn), particularly among Black/African American individuals. This contrast is particularly noteworthy when compared to Manhattan, where a higher count of White individuals is evident. The heatmap's gradient effectively communicates the disparity in Medicaid dependence between these two populous boroughs. Meanwhile, Richmond (Staten Island) shows markedly lower numbers for both racial groups, hinting at different underlying socioeconomic factors at play. The Bronx and Queens present a more balanced distribution, suggesting a more equitable spread of Medicaid coverage across racial lines in these areas.
+In Plot 8, the heatmap provides a stark visualization of racial disparities across NYC boroughs. The variance in color intensity, from light to dark red, denotes the number of Medicaid recipients, revealing a pronounced concentration in Kings (Brooklyn), particularly among Black/African American individuals. This contrast is particularly noteworthy when compared to Manhattan, where a higher count of White individuals is evident. The heatmap's gradient effectively communicates the disparity in Medicaid dependence between these two populous boroughs. Meanwhile, Richmond (Staten Island) shows markedly lower numbers for both racial groups, hinting at different underlying socioeconomic factors at play. The Bronx and Queens present a more balanced distribution, suggesting a more equitable spread of Medicaid coverage across racial lines in these areas.
 
-### Plot 8: New York City Map Analysis
+## Plot 9: New York City Map Analysis
 
 ```{r, fig.height = 6, fig.width = 7, message = FALSE, warning = FALSE}
 #| echo: false
@@ -388,15 +467,904 @@ ggplot(data_sf) +
 
 ```{=tex}
 \begin{center}
-Figure 8: Map of Patients on Medicare in  New York City Boroughs
+Figure 9: Map of Patients on Medicare in  New York City Boroughs
 \end{center}
 ```
-Plot 8 deepens this exploration with a cartographic depiction that merges Medicaid data with the geographic layout of NYC. The boroughs are color-coded, and within each, circles of varying sizes represent the count of Medicaid recipients, with the color designating the race---blue for Black/African American and red for White. The visualization brings to light the sheer volume of Black/African American Medicaid beneficiaries in Brooklyn, as indicated by the dominance of the blue circles. In contrast, Manhattan's red circles point to a higher number of White individuals on Medicaid. This map is more than a visual aid; it encapsulates the demographic disparities in healthcare access and provides a spatial dimension to the quantitative data. For stakeholders, this map is a call to action, highlighting areas where healthcare policies and programs may need to be adjusted to address the specific needs of each borough's population, ensuring a more equitable healthcare system in one of the world's most diverse cities.
+Plot 9 deepens this exploration with a cartographic depiction that merges Medicaid data with the geographic layout of NYC. The boroughs are color-coded, and within each, circles of varying sizes represent the count of Medicaid recipients, with the color designating the race---blue for Black/African American and red for White. The visualization brings to light the sheer volume of Black/African American Medicaid beneficiaries in Brooklyn, as indicated by the dominance of the blue circles. In contrast, Manhattan's red circles point to a higher number of White individuals on Medicaid. This map is more than a visual aid; it encapsulates the demographic disparities in healthcare access and provides a spatial dimension to the quantitative data. For stakeholders, this map is a call to action, highlighting areas where healthcare policies and programs may need to be adjusted to address the specific needs of each borough's population, ensuring a more equitable healthcare system in one of the world's most diverse cities.
 
 In conclusion, the sequence of plots from our analysis paints a telling picture of the healthcare payment landscape in New York City, marked by significant racial and geographic disparities. The pie chart in Plot 6 laid the foundation, showing distinct payment behaviors among racial groups. This was the impetus for a deeper dive into the local context, where the heatmap of Plot 7 highlighted stark contrasts in Medicaid distribution across boroughs, with Kings (Brooklyn) and Manhattan exhibiting pronounced disparities between Black/African American and White populations, respectively. Plot 8's map provided a vivid geographical perspective, reinforcing these disparities with visual cues that emphasize the concentration of Medicaid recipients in specific boroughs. Together, these visualizations not only underscore the existing inequities in healthcare coverage but also underscore the need for targeted policy interventions.
 
 # Killer Plot
 
+In our pursuit to enhance data transparency and support decision-making in healthcare, we introduce the Human Body Economic Diagram (HBED), a proposed analytical tool outlined in this report. The HBED represents a leap forward in medical data visualization, combining anatomical precision with economic analysis. It features an interactive silhouette of the human body, onto which data is mapped in an intuitive and accessible manner.
+
+The HBED's core functionality lies in its ability to visually represent medical procedure frequencies and their associated costs on the human body. By using variably-sized circles, each corresponding to a different body part and scaled to indicate procedural frequency, and color-coding these circles to depict the average costs, the tool provides a quick, comparative view of the medical procedures landscape.
+
+Complementing the diagram, a sophisticated dropdown menu will allow users to delve into the specifics of each anatomical region. Selecting a body part will reveal a detailed dashboard, presenting comprehensive metrics such as success rates of procedures, average recovery times, patient demographics, and regional cost variations. This granularity empowers users with the data needed to make informed decisions. The dropdown also includes Shiny elements to toggle between the year 2013 and 2021, and the body parts of head, chest, and torso.
+
+Designed to be responsive and versatile, the HBED tool will be accessible across a range of devices, ensuring that whether a patient seeking cost transparency, a healthcare professional comparing procedural statistics, or a policymaker analyzing economic trends in healthcare, the information is readily available.
+
 ## Human Body Economic Diagram
 
+```{r, fig.height= 3, fig.width=5, warning = FALSE, message = FALSE}
+#| echo: false
+library(shiny)
+library(grid)
+library(gridExtra)
+library(scales)
+
+query <- dbSendQuery(dcon,"
+  SELECT *
+  FROM '2021data';
+  ")
+  data_2021 <- dbFetch(query, -1)
+  dbClearResult(query)
+  query <- dbSendQuery(dcon,"
+  SELECT *
+  FROM '2013data';
+  ")
+  data_2013 <- dbFetch(query, -1)
+  dbClearResult(query)
+
+   # This function wraps your existing grid drawing code
+  drawYourPlot <- function() {
+    if(input$time == "2013"){
+  cleaned_data <- data_2013
+}
+  if(input$time == "2021"){
+  cleaned_data <- data_2021
+  
+}
+     
+  chest <- select(cleaned_data, APRMDCCode, TotalCharges, LengthofStay) %>% 
+  filter(APRMDCCode %in% c(16, 5, 8, 4, 9, 21))
+
+head <- select(cleaned_data, APRMDCCode, TotalCharges,LengthofStay) %>% 
+  filter(APRMDCCode %in% c(20, 2, 1, 3, 10, 18, 19, 23))
+
+stomach <- select(cleaned_data, APRMDCCode, TotalCharges, LengthofStay) %>% 
+  filter(APRMDCCode %in% c(6, 13, 7, 11, 12, 17, 15, 24))
+
+chest_count <- length(chest$APRMDCCode)
+head_count <- length(head$APRMDCCode)
+stomach_count <- length(stomach$APRMDCCode)
+total_count <- length(cleaned_data$APRDRGCode)
+
+draw_bed<- function(){
+#bed frame
+grid.draw(rectGrob(x = 0.80, y = 0.3, width = 0.375, height = 0.1, gp = gpar(fill = "brown3", col = "brown3", lwd = 2)))
+#mattress
+grid.draw(rectGrob(x = 0.80, y = 0.325, width = 0.35, height = 0.12, gp = gpar(fill = "gray", col = "gray", lwd = 2)))
+#pillow
+grid.draw(rectGrob(x = 0.675, y = 0.38, width = 0.125, height = 0.05, gp = gpar(fill = "gray", col = "darkgray", lwd = 2)))
+
+#left headboard
+grid.draw(rectGrob(x = 0.6, y = 0.35, width = 0.05, height = 0.35, gp = gpar(fill = "brown3", col = "brown3", lwd = 2)))
+
+#right headboard
+grid.draw(rectGrob(x = 0.975, y = 0.325, width = 0.05, height = 0.3, gp = gpar(fill = "brown3", col = "brown3", lwd = 2)))
+
+#blanket
+grid.draw(rectGrob(x = 0.85, y = 0.325, width = 0.2, height = 0.135, gp = gpar(fill = "lightpink", col = "pink2", lwd = 2)))
+
+grid.text("Average Charge per Day", x = 0.8, y = 0.5, just = "centre", gp = gpar(fontsize = 10))
+
+if(input$bodyPart == "Head"){
+  grid.text(round(sum(head$TotalCharges)/sum(head$LengthofStay),2), x = 0.85, y = 0.33, just = "centre")
+}
+else if(input$bodyPart == "Chest"){
+   grid.text(round(sum(chest$TotalCharges)/sum(chest$LengthofStay), 2), x = 0.85, y = 0.33, just = "centre")
+}
+else if(input$bodyPart == "Torso"){
+   grid.text(round(sum(stomach$TotalCharges)/sum(stomach$LengthofStay), 2), x = 0.85, y = 0.33, just = "centre")
+  }
+}
+head_gp <- gpar(fill = "white")
+body_gp <- gpar(fill = "black")
+arms_gp <- gpar(fill = "white")
+legs_gp <- gpar(fill = "khaki")
+if(input$bodyPart == "Total"){
+grid.newpage()
+color_palette <- colorRampPalette(c("green", "red"))
+#Drawing the gradient key
+grad_key_height <- 0.5
+grad_key_width <- 0.05
+grad_key_x <- 0.7
+grad_key_y <- 0.5
+
+draw_vertical_rectangle <- function(x, y, width, height, gp = gpar()) {
+  grid.rect(x = x - width / 2, y = y - height / 2, width = width, height = height, gp = gp)
+}
+
+grid.rect(x = grad_key_x-.025, y = grad_key_y-0.005, width = grad_key_width, height = grad_key_height, gp = gpar(col = "black"))
+
+
+colors <- color_palette(100)
+for (i in 1:100) {
+  rect_gp <- gpar(fill = colors[i], col = NA)
+  y_pos <- grad_key_y - (grad_key_height / 2) + ((i - 1) / 100) * grad_key_height
+  draw_vertical_rectangle(x = grad_key_x, y = y_pos, width = grad_key_width, height = grad_key_height / 100, gp = rect_gp)
+}
+# Add labels to the gradient key
+grid.text("$", x = grad_key_x-0.015, y = grad_key_y - (grad_key_height / 2) - 0.02, just = "centre")
+grid.text("$$$", x = grad_key_x-0.015, y = grad_key_y + (grad_key_height / 2) + 0.02, just = "centre")
+grid.text("Costs", x = grad_key_x-0.015, y = grad_key_y + (grad_key_height / 2) + 0.1, just = "centre")
+
+
+
+get_color <- function(count, max_count) {
+  # Assuming 'color_palette' is a function or vector of colors that returns a color based on the index
+  normalized_count <- count/max_count
+  colors <- colorRampPalette(c("green", "yellow", "orange", "orange", "red"))(100)  # Blue for less, Red for more
+  color_index <- max(1, ceiling(normalized_count*100))
+  return(colors[color_index])
+}
+draw_circle <- function(x, y, radius, gp = gpar()) {
+  grid.circle(x = x, y = y, r = radius, gp = gp)
+}
+
+
+
+max_group_cost <- max(mean(head$TotalCharges), mean(chest$TotalCharges), mean(stomach$TotalCharges))
+head_count_gp <- gpar(fill = get_color(mean(head$TotalCharges), max_group_cost))
+chest_count_gp <- gpar(fill = get_color(mean(chest$TotalCharges), max_group_cost))
+stomach_count_gp <- gpar(fill = get_color(mean(stomach$TotalCharges), max_group_cost))
+
+draw_vertical_rectangle(x = 0.3, y = 0.75, width = 0.1, height = 0.35, gp = arms_gp) # this is neck
+draw_circle(x = 0.25, y = 0.78, radius = 0.11, gp = head_gp) # this is head
+draw_vertical_rectangle(x = 0.35, y = 0.65, width = 0.2, height = 0.35, gp = body_gp) # this is body
+draw_vertical_rectangle(x = 0.15, y = 0.65, width = 0.05, height = 0.35, gp = arms_gp) # this is left arm
+
+draw_circle(0.25,0.78, (head_count/total_count)/10, head_count_gp)
+draw_circle(0.30,0.60, (chest_count/total_count)/10, chest_count_gp)
+draw_circle(0.25,0.43, (stomach_count/total_count)/10, stomach_count_gp)
+
+
+draw_circle(0.85,.28, .03)
+draw_circle(0.85,.36, .04)
+draw_circle(0.85,.45, .045)
+draw_circle(0.85,.555, .0525)
+draw_circle(0.85,.68, .06)
+grid.text("Less", x = 0.85, y = grad_key_y - (grad_key_height / 2) - 0.02, just = "centre")
+grid.text("More", x = 0.85, y = grad_key_y + (grad_key_height / 2) + 0.02, just = "centre")
+grid.text("# of Cases", x = 0.85, y = grad_key_y + (grad_key_height / 2) + 0.1, just = "centre")
+
+
+
+
+draw_vertical_rectangle(x = 0.4, y = 0.65, width = 0.05, height = 0.35, gp = arms_gp) # this is right arm
+draw_vertical_rectangle(x = 0.25, y = 0.35, width = 0.1, height = 0.3, gp = legs_gp) # this is left leg
+draw_vertical_rectangle(x = 0.35, y = 0.35, width = 0.1, height = 0.3, gp = legs_gp) # this is right leg
+grid.ellipse(x = 0.25, y = 0.88, size = 9, ar = 4, angle = 0, gp = gpar(fill = "black"))
+}
+    # Here you would add additional grid drawing code based on the input$bodyPart
+    # For example:
+    else if (input$bodyPart == "Head") {
+      # Add grid elements specific to the head
+      grid.newpage()
+
+grid.circle(x = 0.25, y = 0.5, r = 0.35, gp = gpar(fill = "white", col = "black", lwd = 3))
+grid.lines(x = c(0.15), y = c(0,0.19), 
+           gp = gpar(col = "black", lwd = 3))
+grid.lines(x = c(0.35), y = c(0,0.19), 
+           gp = gpar(col = "black", lwd = 3))
+
+colors <- colorRampPalette(c("red", "yellow","green"))(1000)
+num_circles <- length(colors)
+
+# CIRCLE
+circle_radius <- 0.1
+x_center <- 0.80
+y_center <- 0.75
+
+# GRADIETN FOR CIRCLE
+for (i in 1:num_circles) {
+  color <- colors[i]
+  angle <- seq(0, pi, length.out = num_circles + 1)[i]
+  x <- x_center + circle_radius * cos(angle) 
+  y <- y_center + circle_radius * sin(angle) 
+  #grid.draw()
+  grid.circle(x = x, y = y, r = 50 / num_circles, gp = gpar(fill = color, col = color))
+}
+  #grid.rect(x = 0.3, y = 0.25, gp = gpar(fill = "white", col = "white"), width = 2, height = .5)
+  # LINES for APR Code
+# 4
+grid.lines(x = c(0.8, 0.9), y = c(0.7, .8), 
+           gp = gpar(col = "black", lwd = 3))
+
+grid.ellipse(x = 0.25, y = 0.85, size = 30, ar = 4, angle = 0, gp = gpar(fill = "black"))
+grid.text("APR Severity Level", x= 0.8, y = 0.95, just = "centre")
+draw_bed()
+
+
+    } else if (input$bodyPart == "Torso") {
+      # Add grid elements specific to the torso
+      grid.newpage()
+
+      draw_circle <- function(x, y, radius, gp = gpar()) {
+  grid.circle(x = x, y = y, r = radius, gp = gp)
+}
+draw_vertical_rectangle <- function(x, y, width, height, gp = gpar()) {
+  grid.rect(x = x - width / 2, y = y - height / 2, width = width, height = height, gp = gp)
+}
+draw_vertical_rectangle(x = 0.45, y = 0.95, width = 0.4, height = 0.6, gp = body_gp) # this is body
+draw_vertical_rectangle(x = 0.25, y = 0.35, width = 0.2, height = 0.4, gp = legs_gp) # this is left leg
+draw_vertical_rectangle(x = 0.45, y = 0.35, width = 0.2, height = 0.4, gp = legs_gp) # this is right leg
+
+
+colors <- colorRampPalette(c("red", "yellow","green"))(1000)
+num_circles <- length(colors)
+
+# CIRCLE
+circle_radius <- 0.1
+x_center <- 0.80
+y_center <- 0.75
+
+# GRADIETN FOR CIRCLE
+for (i in 1:num_circles) { 
+  color <- colors[i]
+  angle <- seq(0, pi, length.out = num_circles + 1)[i]
+  x <- x_center + circle_radius * cos(angle) 
+  y <- y_center + circle_radius * sin(angle) 
+  grid.circle(x = x, y = y, r = 50 / num_circles, gp = gpar(fill = color, col = color))
+}
+# LINES for APR Code
+
+  # 2
+grid.lines(x = c(0.75, .8), y = c(0.85, .7), 
+           gp = gpar(col = "black", lwd = 3))
+
+grid.text("APR Severity Level", x= 0.8, y = 0.95, just = "centre")
+draw_bed()
+    } else if (input$bodyPart == "Chest") {
+      # Add grid elements specific to the chest
+      grid.newpage()
+draw_circle <- function(x, y, radius, gp = gpar()) {
+  grid.circle(x = x, y = y, r = radius, gp = gp)
+}
+draw_vertical_rectangle <- function(x, y, width, height, gp = gpar()) {
+  grid.rect(x = x - width / 2, y = y - height / 2, width = width, height = height, gp = gp)
+}
+draw_vertical_rectangle(x = 0.4, y = 0.55, width = 0.3, height = 0.6, gp = body_gp) # this is body
+draw_vertical_rectangle(x = 0.10, y = 0.55, width = 0.05, height = 0.4, gp = arms_gp) # this is left arm
+draw_vertical_rectangle(x = 0.45, y = 0.55, width = 0.05, height = 0.4, gp = arms_gp) # this is right arm
+
+
+colors <- colorRampPalette(c("red", "yellow","green"))(1000)
+num_circles <- length(colors)
+
+# CIRCLE
+circle_radius <- 0.1
+x_center <- 0.80
+y_center <- 0.75
+
+# GRADIENT FOR CIRCLE
+for (i in 1:num_circles) { 
+  color <- colors[i]
+  angle <- seq(0, pi, length.out = num_circles + 1)[i]
+  x <- x_center + circle_radius * cos(angle) 
+  y <- y_center + circle_radius * sin(angle) 
+  grid.circle(x = x, y = y, r = 50 / num_circles, gp = gpar(fill = color, col = color))
+}
+# LINES for APR Code
+#3
+grid.lines(x = c(0.8, .85), y = c(0.7, .85), 
+           gp = gpar(col = "black", lwd = 3))
+
+grid.text("APR Severity Level", x= 0.8, y = 0.95, just = "centre")
+draw_bed()
+    }
+  }
+  
+  input <- data.frame(time  = "2013",
+                  bodyPart= "Total"
+                  )
+
+    drawYourPlot()
+
+```
+
+```{=tex}
+\begin{center}
+Figure 10: Initial Screen of HBED with Cases and Costs
+\end{center}
+```
+In Figure 10 of the Human Body Economic Diagram (HBED) for 2013, colored circles on the human silhouette represent the average cost of medical procedures for the head, torso, and chest. The red circle on the head indicates high-cost procedures, likely due to specialized surgeries. The torso's orange circle suggests moderate costs, possibly from a range of surgical interventions, while the yellow circle on the chest points to lower costs, associated with more routine procedures. These color-coded circles quickly convey the cost disparities of medical procedures across different body regions, encapsulating the economic aspect of healthcare in 2013.
+
+```{r, fig.height= 3, fig.width= 5, warning = FALSE, message = FALSE}
+#| echo: false
+library(shiny)
+library(grid)
+library(gridExtra)
+library(scales)
+
+query <- dbSendQuery(dcon,"
+  SELECT *
+  FROM '2021data';
+  ")
+  data_2021 <- dbFetch(query, -1)
+  dbClearResult(query)
+  query <- dbSendQuery(dcon,"
+  SELECT *
+  FROM '2013data';
+  ")
+  data_2013 <- dbFetch(query, -1)
+  dbClearResult(query)
+
+   # This function wraps your existing grid drawing code
+  drawYourPlot <- function() {
+    if(input$time == "2013"){
+  cleaned_data <- data_2013
+}
+  if(input$time == "2021"){
+  cleaned_data <- data_2021
+  
+}
+     
+  chest <- select(cleaned_data, APRMDCCode, TotalCharges, LengthofStay) %>% 
+  filter(APRMDCCode %in% c(16, 5, 8, 4, 9, 21))
+
+head <- select(cleaned_data, APRMDCCode, TotalCharges,LengthofStay) %>% 
+  filter(APRMDCCode %in% c(20, 2, 1, 3, 10, 18, 19, 23))
+
+stomach <- select(cleaned_data, APRMDCCode, TotalCharges, LengthofStay) %>% 
+  filter(APRMDCCode %in% c(6, 13, 7, 11, 12, 17, 15, 24))
+
+chest_count <- length(chest$APRMDCCode)
+head_count <- length(head$APRMDCCode)
+stomach_count <- length(stomach$APRMDCCode)
+total_count <- length(cleaned_data$APRDRGCode)
+
+draw_bed<- function(){
+#bed frame
+grid.draw(rectGrob(x = 0.80, y = 0.3, width = 0.375, height = 0.1, gp = gpar(fill = "brown3", col = "brown3", lwd = 2)))
+#mattress
+grid.draw(rectGrob(x = 0.80, y = 0.325, width = 0.35, height = 0.12, gp = gpar(fill = "gray", col = "gray", lwd = 2)))
+#pillow
+grid.draw(rectGrob(x = 0.675, y = 0.38, width = 0.125, height = 0.05, gp = gpar(fill = "gray", col = "darkgray", lwd = 2)))
+
+#left headboard
+grid.draw(rectGrob(x = 0.6, y = 0.35, width = 0.05, height = 0.35, gp = gpar(fill = "brown3", col = "brown3", lwd = 2)))
+
+#right headboard
+grid.draw(rectGrob(x = 0.975, y = 0.325, width = 0.05, height = 0.3, gp = gpar(fill = "brown3", col = "brown3", lwd = 2)))
+
+#blanket
+grid.draw(rectGrob(x = 0.85, y = 0.325, width = 0.2, height = 0.135, gp = gpar(fill = "lightpink", col = "pink2", lwd = 2)))
+
+grid.text("Average Charge per Day", x = 0.8, y = 0.5, just = "centre", gp = gpar(fontsize = 10))
+
+if(input$bodyPart == "Head"){
+  grid.text(round(sum(head$TotalCharges)/sum(head$LengthofStay),2), x = 0.85, y = 0.33, just = "centre")
+}
+else if(input$bodyPart == "Chest"){
+   grid.text(round(sum(chest$TotalCharges)/sum(chest$LengthofStay), 2), x = 0.85, y = 0.33, just = "centre")
+}
+else if(input$bodyPart == "Torso"){
+   grid.text(round(sum(stomach$TotalCharges)/sum(stomach$LengthofStay), 2), x = 0.85, y = 0.33, just = "centre")
+  }
+}
+head_gp <- gpar(fill = "white")
+body_gp <- gpar(fill = "black")
+arms_gp <- gpar(fill = "white")
+legs_gp <- gpar(fill = "khaki")
+if(input$bodyPart == "Total"){
+grid.newpage()
+color_palette <- colorRampPalette(c("green", "red"))
+#Drawing the gradient key
+grad_key_height <- 0.5
+grad_key_width <- 0.05
+grad_key_x <- 0.7
+grad_key_y <- 0.5
+
+draw_vertical_rectangle <- function(x, y, width, height, gp = gpar()) {
+  grid.rect(x = x - width / 2, y = y - height / 2, width = width, height = height, gp = gp)
+}
+
+grid.rect(x = grad_key_x-.025, y = grad_key_y-0.005, width = grad_key_width, height = grad_key_height, gp = gpar(col = "black"))
+
+
+colors <- color_palette(100)
+for (i in 1:100) {
+  rect_gp <- gpar(fill = colors[i], col = NA)
+  y_pos <- grad_key_y - (grad_key_height / 2) + ((i - 1) / 100) * grad_key_height
+  draw_vertical_rectangle(x = grad_key_x, y = y_pos, width = grad_key_width, height = grad_key_height / 100, gp = rect_gp)
+}
+# Add labels to the gradient key
+grid.text("$", x = grad_key_x-0.015, y = grad_key_y - (grad_key_height / 2) - 0.02, just = "centre")
+grid.text("$$$", x = grad_key_x-0.015, y = grad_key_y + (grad_key_height / 2) + 0.02, just = "centre")
+grid.text("Costs", x = grad_key_x-0.015, y = grad_key_y + (grad_key_height / 2) + 0.1, just = "centre")
+
+
+
+get_color <- function(count, max_count) {
+  # Assuming 'color_palette' is a function or vector of colors that returns a color based on the index
+  normalized_count <- count/max_count
+  colors <- colorRampPalette(c("green", "yellow", "orange", "orange", "red"))(100)  # Blue for less, Red for more
+  color_index <- max(1, ceiling(normalized_count*100))
+  return(colors[color_index])
+}
+draw_circle <- function(x, y, radius, gp = gpar()) {
+  grid.circle(x = x, y = y, r = radius, gp = gp)
+}
+
+
+
+max_group_cost <- max(mean(head$TotalCharges), mean(chest$TotalCharges), mean(stomach$TotalCharges))
+head_count_gp <- gpar(fill = get_color(mean(head$TotalCharges), max_group_cost))
+chest_count_gp <- gpar(fill = get_color(mean(chest$TotalCharges), max_group_cost))
+stomach_count_gp <- gpar(fill = get_color(mean(stomach$TotalCharges), max_group_cost))
+
+draw_vertical_rectangle(x = 0.3, y = 0.75, width = 0.1, height = 0.35, gp = arms_gp) # this is neck
+draw_circle(x = 0.25, y = 0.78, radius = 0.11, gp = head_gp) # this is head
+draw_vertical_rectangle(x = 0.35, y = 0.65, width = 0.2, height = 0.35, gp = body_gp) # this is body
+draw_vertical_rectangle(x = 0.15, y = 0.65, width = 0.05, height = 0.35, gp = arms_gp) # this is left arm
+
+draw_circle(0.25,0.78, (head_count/total_count)/10, head_count_gp)
+draw_circle(0.30,0.60, (chest_count/total_count)/10, chest_count_gp)
+draw_circle(0.25,0.43, (stomach_count/total_count)/10, stomach_count_gp)
+
+
+draw_circle(0.85,.28, .03)
+draw_circle(0.85,.36, .04)
+draw_circle(0.85,.45, .045)
+draw_circle(0.85,.555, .0525)
+draw_circle(0.85,.68, .06)
+grid.text("Less", x = 0.85, y = grad_key_y - (grad_key_height / 2) - 0.02, just = "centre")
+grid.text("More", x = 0.85, y = grad_key_y + (grad_key_height / 2) + 0.02, just = "centre")
+grid.text("# of Cases", x = 0.85, y = grad_key_y + (grad_key_height / 2) + 0.1, just = "centre")
+
+
+
+
+draw_vertical_rectangle(x = 0.4, y = 0.65, width = 0.05, height = 0.35, gp = arms_gp) # this is right arm
+draw_vertical_rectangle(x = 0.25, y = 0.35, width = 0.1, height = 0.3, gp = legs_gp) # this is left leg
+draw_vertical_rectangle(x = 0.35, y = 0.35, width = 0.1, height = 0.3, gp = legs_gp) # this is right leg
+grid.ellipse(x = 0.25, y = 0.88, size = 9, ar = 4, angle = 0, gp = gpar(fill = "black"))
+}
+    # Here you would add additional grid drawing code based on the input$bodyPart
+    # For example:
+    else if (input$bodyPart == "Head") {
+      # Add grid elements specific to the head
+      grid.newpage()
+
+grid.circle(x = 0.25, y = 0.5, r = 0.35, gp = gpar(fill = "white", col = "black", lwd = 3))
+grid.lines(x = c(0.15), y = c(0,0.19), 
+           gp = gpar(col = "black", lwd = 3))
+grid.lines(x = c(0.35), y = c(0,0.19), 
+           gp = gpar(col = "black", lwd = 3))
+
+colors <- colorRampPalette(c("red", "yellow","green"))(1000)
+num_circles <- length(colors)
+
+# CIRCLE
+circle_radius <- 0.1
+x_center <- 0.80
+y_center <- 0.75
+
+# GRADIETN FOR CIRCLE
+for (i in 1:num_circles) {
+  color <- colors[i]
+  angle <- seq(0, pi, length.out = num_circles + 1)[i]
+  x <- x_center + circle_radius * cos(angle) 
+  y <- y_center + circle_radius * sin(angle) 
+  #grid.draw()
+  grid.circle(x = x, y = y, r = 50 / num_circles, gp = gpar(fill = color, col = color))
+}
+  #grid.rect(x = 0.3, y = 0.25, gp = gpar(fill = "white", col = "white"), width = 2, height = .5)
+  # LINES for APR Code
+# 4
+grid.lines(x = c(0.8, 0.9), y = c(0.7, .8), 
+           gp = gpar(col = "black", lwd = 3))
+
+grid.ellipse(x = 0.25, y = 0.85, size = 20, ar = 4, angle = 0, gp = gpar(fill = "black"))
+grid.text("APR Severity Level", x= 0.8, y = 0.95, just = "centre")
+draw_bed()
+
+
+    } else if (input$bodyPart == "Torso") {
+      # Add grid elements specific to the torso
+      grid.newpage()
+
+      draw_circle <- function(x, y, radius, gp = gpar()) {
+  grid.circle(x = x, y = y, r = radius, gp = gp)
+}
+draw_vertical_rectangle <- function(x, y, width, height, gp = gpar()) {
+  grid.rect(x = x - width / 2, y = y - height / 2, width = width, height = height, gp = gp)
+}
+draw_vertical_rectangle(x = 0.45, y = 0.95, width = 0.4, height = 0.6, gp = body_gp) # this is body
+draw_vertical_rectangle(x = 0.25, y = 0.35, width = 0.2, height = 0.4, gp = legs_gp) # this is left leg
+draw_vertical_rectangle(x = 0.45, y = 0.35, width = 0.2, height = 0.4, gp = legs_gp) # this is right leg
+
+
+colors <- colorRampPalette(c("red", "yellow","green"))(1000)
+num_circles <- length(colors)
+
+# CIRCLE
+circle_radius <- 0.1
+x_center <- 0.80
+y_center <- 0.75
+
+# GRADIETN FOR CIRCLE
+for (i in 1:num_circles) { 
+  color <- colors[i]
+  angle <- seq(0, pi, length.out = num_circles + 1)[i]
+  x <- x_center + circle_radius * cos(angle) 
+  y <- y_center + circle_radius * sin(angle) 
+  grid.circle(x = x, y = y, r = 50 / num_circles, gp = gpar(fill = color, col = color))
+}
+# LINES for APR Code
+
+  # 2
+grid.lines(x = c(0.75, .8), y = c(0.85, .7), 
+           gp = gpar(col = "black", lwd = 3))
+
+grid.text("APR Severity Level", x= 0.8, y = 0.95, just = "centre")
+draw_bed()
+    } else if (input$bodyPart == "Chest") {
+      # Add grid elements specific to the chest
+      grid.newpage()
+draw_circle <- function(x, y, radius, gp = gpar()) {
+  grid.circle(x = x, y = y, r = radius, gp = gp)
+}
+draw_vertical_rectangle <- function(x, y, width, height, gp = gpar()) {
+  grid.rect(x = x - width / 2, y = y - height / 2, width = width, height = height, gp = gp)
+}
+draw_vertical_rectangle(x = 0.4, y = 0.55, width = 0.3, height = 0.6, gp = body_gp) # this is body
+draw_vertical_rectangle(x = 0.10, y = 0.55, width = 0.05, height = 0.4, gp = arms_gp) # this is left arm
+draw_vertical_rectangle(x = 0.45, y = 0.55, width = 0.05, height = 0.4, gp = arms_gp) # this is right arm
+
+
+colors <- colorRampPalette(c("red", "yellow","green"))(1000)
+num_circles <- length(colors)
+
+# CIRCLE
+circle_radius <- 0.1
+x_center <- 0.80
+y_center <- 0.75
+
+# GRADIENT FOR CIRCLE
+for (i in 1:num_circles) { 
+  color <- colors[i]
+  angle <- seq(0, pi, length.out = num_circles + 1)[i]
+  x <- x_center + circle_radius * cos(angle) 
+  y <- y_center + circle_radius * sin(angle) 
+  grid.circle(x = x, y = y, r = 50 / num_circles, gp = gpar(fill = color, col = color))
+}
+# LINES for APR Code
+#3
+grid.lines(x = c(0.8, .85), y = c(0.7, .85), 
+           gp = gpar(col = "black", lwd = 3))
+
+grid.text("APR Severity Level", x= 0.8, y = 0.95, just = "centre")
+draw_bed()
+    }
+  }
+  
+  input <- data.frame(time  = "2013",
+                  bodyPart= "Head"
+                  )
+
+    drawYourPlot()
+
+```
+
+```{=tex}
+\begin{center}
+Figure 11: 2013 Dropdown of Head with HBED Data
+\end{center}
+```
+Figure 11 of the HBED for 2013 shows an APR Severity Level gauge by the head silhouette, highlighting high-risk and complex medical procedures, with a needle pointing towards the more severe end. The bar chart indicates a daily average cost of \$5,366.11, signaling the significant expenses incurred by such specialized treatments, potentially involving cutting-edge technology and high-level expertise. This detailed economic and clinical information aids in strategic healthcare management and the formulation of policies to ensure the delivery of cost-effective yet high-quality head medical procedures. Moreover, it can serve as a benchmark for tracking cost trends and evaluating the impact of new technologies or treatment protocols over time.
+
+```{r, fig.height= 3, fig.width= 5, warning = FALSE, message = FALSE}
+#| echo: false
+library(shiny)
+library(grid)
+library(gridExtra)
+library(scales)
+
+query <- dbSendQuery(dcon,"
+  SELECT *
+  FROM '2021data';
+  ")
+  data_2021 <- dbFetch(query, -1)
+  dbClearResult(query)
+  query <- dbSendQuery(dcon,"
+  SELECT *
+  FROM '2013data';
+  ")
+  data_2013 <- dbFetch(query, -1)
+  dbClearResult(query)
+
+   # This function wraps your existing grid drawing code
+  drawYourPlot <- function() {
+    if(input$time == "2013"){
+  cleaned_data <- data_2013
+}
+  if(input$time == "2021"){
+  cleaned_data <- data_2021
+  
+}
+     
+  chest <- select(cleaned_data, APRMDCCode, TotalCharges, LengthofStay) %>% 
+  filter(APRMDCCode %in% c(16, 5, 8, 4, 9, 21))
+
+head <- select(cleaned_data, APRMDCCode, TotalCharges,LengthofStay) %>% 
+  filter(APRMDCCode %in% c(20, 2, 1, 3, 10, 18, 19, 23))
+
+stomach <- select(cleaned_data, APRMDCCode, TotalCharges, LengthofStay) %>% 
+  filter(APRMDCCode %in% c(6, 13, 7, 11, 12, 17, 15, 24))
+
+chest_count <- length(chest$APRMDCCode)
+head_count <- length(head$APRMDCCode)
+stomach_count <- length(stomach$APRMDCCode)
+total_count <- length(cleaned_data$APRDRGCode)
+
+draw_bed<- function(){
+#bed frame
+grid.draw(rectGrob(x = 0.80, y = 0.3, width = 0.375, height = 0.1, gp = gpar(fill = "brown3", col = "brown3", lwd = 2)))
+#mattress
+grid.draw(rectGrob(x = 0.80, y = 0.325, width = 0.35, height = 0.12, gp = gpar(fill = "gray", col = "gray", lwd = 2)))
+#pillow
+grid.draw(rectGrob(x = 0.675, y = 0.38, width = 0.125, height = 0.05, gp = gpar(fill = "gray", col = "darkgray", lwd = 2)))
+
+#left headboard
+grid.draw(rectGrob(x = 0.6, y = 0.35, width = 0.05, height = 0.35, gp = gpar(fill = "brown3", col = "brown3", lwd = 2)))
+
+#right headboard
+grid.draw(rectGrob(x = 0.975, y = 0.325, width = 0.05, height = 0.3, gp = gpar(fill = "brown3", col = "brown3", lwd = 2)))
+
+#blanket
+grid.draw(rectGrob(x = 0.85, y = 0.325, width = 0.2, height = 0.135, gp = gpar(fill = "lightpink", col = "pink2", lwd = 2)))
+
+grid.text("Average Charge per Day", x = 0.8, y = 0.5, just = "centre",gp = gpar(fontsize = 10))
+
+if(input$bodyPart == "Head"){
+  grid.text(round(sum(head$TotalCharges)/sum(head$LengthofStay),2), x = 0.85, y = 0.33, just = "centre")
+}
+else if(input$bodyPart == "Chest"){
+   grid.text(round(sum(chest$TotalCharges)/sum(chest$LengthofStay), 2), x = 0.85, y = 0.33, just = "centre")
+}
+else if(input$bodyPart == "Torso"){
+   grid.text(round(sum(stomach$TotalCharges)/sum(stomach$LengthofStay), 2), x = 0.85, y = 0.33, just = "centre")
+  }
+}
+head_gp <- gpar(fill = "white")
+body_gp <- gpar(fill = "black")
+arms_gp <- gpar(fill = "white")
+legs_gp <- gpar(fill = "khaki")
+if(input$bodyPart == "Total"){
+grid.newpage()
+color_palette <- colorRampPalette(c("green", "red"))
+#Drawing the gradient key
+grad_key_height <- 0.5
+grad_key_width <- 0.05
+grad_key_x <- 0.7
+grad_key_y <- 0.5
+
+draw_vertical_rectangle <- function(x, y, width, height, gp = gpar()) {
+  grid.rect(x = x - width / 2, y = y - height / 2, width = width, height = height, gp = gp)
+}
+
+grid.rect(x = grad_key_x-.025, y = grad_key_y-0.005, width = grad_key_width, height = grad_key_height, gp = gpar(col = "black"))
+
+
+colors <- color_palette(100)
+for (i in 1:100) {
+  rect_gp <- gpar(fill = colors[i], col = NA)
+  y_pos <- grad_key_y - (grad_key_height / 2) + ((i - 1) / 100) * grad_key_height
+  draw_vertical_rectangle(x = grad_key_x, y = y_pos, width = grad_key_width, height = grad_key_height / 100, gp = rect_gp)
+}
+# Add labels to the gradient key
+grid.text("$", x = grad_key_x-0.015, y = grad_key_y - (grad_key_height / 2) - 0.02, just = "centre")
+grid.text("$$$", x = grad_key_x-0.015, y = grad_key_y + (grad_key_height / 2) + 0.02, just = "centre")
+grid.text("Costs", x = grad_key_x-0.015, y = grad_key_y + (grad_key_height / 2) + 0.1, just = "centre")
+
+
+
+get_color <- function(count, max_count) {
+  # Assuming 'color_palette' is a function or vector of colors that returns a color based on the index
+  normalized_count <- count/max_count
+  colors <- colorRampPalette(c("green", "yellow", "orange", "orange", "red"))(100)  # Blue for less, Red for more
+  color_index <- max(1, ceiling(normalized_count*100))
+  return(colors[color_index])
+}
+draw_circle <- function(x, y, radius, gp = gpar()) {
+  grid.circle(x = x, y = y, r = radius, gp = gp)
+}
+
+
+
+max_group_cost <- max(mean(head$TotalCharges), mean(chest$TotalCharges), mean(stomach$TotalCharges))
+head_count_gp <- gpar(fill = get_color(mean(head$TotalCharges), max_group_cost))
+chest_count_gp <- gpar(fill = get_color(mean(chest$TotalCharges), max_group_cost))
+stomach_count_gp <- gpar(fill = get_color(mean(stomach$TotalCharges), max_group_cost))
+
+draw_vertical_rectangle(x = 0.3, y = 0.75, width = 0.1, height = 0.35, gp = arms_gp) # this is neck
+draw_circle(x = 0.25, y = 0.78, radius = 0.11, gp = head_gp) # this is head
+draw_vertical_rectangle(x = 0.35, y = 0.65, width = 0.2, height = 0.35, gp = body_gp) # this is body
+draw_vertical_rectangle(x = 0.15, y = 0.65, width = 0.05, height = 0.35, gp = arms_gp) # this is left arm
+
+draw_circle(0.25,0.78, (head_count/total_count)/10, head_count_gp)
+draw_circle(0.30,0.60, (chest_count/total_count)/10, chest_count_gp)
+draw_circle(0.25,0.43, (stomach_count/total_count)/10, stomach_count_gp)
+
+
+draw_circle(0.85,.28, .03)
+draw_circle(0.85,.36, .04)
+draw_circle(0.85,.45, .045)
+draw_circle(0.85,.555, .0525)
+draw_circle(0.85,.68, .06)
+grid.text("Less", x = 0.85, y = grad_key_y - (grad_key_height / 2) - 0.02, just = "centre")
+grid.text("More", x = 0.85, y = grad_key_y + (grad_key_height / 2) + 0.02, just = "centre")
+grid.text("# of Cases", x = 0.85, y = grad_key_y + (grad_key_height / 2) + 0.1, just = "centre")
+
+
+
+
+draw_vertical_rectangle(x = 0.4, y = 0.65, width = 0.05, height = 0.35, gp = arms_gp) # this is right arm
+draw_vertical_rectangle(x = 0.25, y = 0.35, width = 0.1, height = 0.3, gp = legs_gp) # this is left leg
+draw_vertical_rectangle(x = 0.35, y = 0.35, width = 0.1, height = 0.3, gp = legs_gp) # this is right leg
+grid.ellipse(x = 0.25, y = 0.88, size = 9, ar = 4, angle = 0, gp = gpar(fill = "black"))
+}
+    # Here you would add additional grid drawing code based on the input$bodyPart
+    # For example:
+    else if (input$bodyPart == "Head") {
+      # Add grid elements specific to the head
+      grid.newpage()
+
+grid.circle(x = 0.25, y = 0.5, r = 0.35, gp = gpar(fill = "white", col = "black", lwd = 3))
+grid.lines(x = c(0.15), y = c(0,0.19), 
+           gp = gpar(col = "black", lwd = 3))
+grid.lines(x = c(0.35), y = c(0,0.19), 
+           gp = gpar(col = "black", lwd = 3))
+
+colors <- colorRampPalette(c("red", "yellow","green"))(1000)
+num_circles <- length(colors)
+
+# CIRCLE
+circle_radius <- 0.1
+x_center <- 0.80
+y_center <- 0.75
+
+# GRADIETN FOR CIRCLE
+for (i in 1:num_circles) {
+  color <- colors[i]
+  angle <- seq(0, pi, length.out = num_circles + 1)[i]
+  x <- x_center + circle_radius * cos(angle) 
+  y <- y_center + circle_radius * sin(angle) 
+  #grid.draw()
+  grid.circle(x = x, y = y, r = 50 / num_circles, gp = gpar(fill = color, col = color))
+}
+  #grid.rect(x = 0.3, y = 0.25, gp = gpar(fill = "white", col = "white"), width = 2, height = .5)
+  # LINES for APR Code
+# 4
+grid.lines(x = c(0.8, 0.9), y = c(0.7, .8), 
+           gp = gpar(col = "black", lwd = 3))
+
+grid.ellipse(x = 0.25, y = 0.85, size = 20, ar = 4, angle = 0, gp = gpar(fill = "black"))
+grid.text("APR Severity Level", x= 0.8, y = 0.95, just = "centre")
+draw_bed()
+
+
+    } else if (input$bodyPart == "Torso") {
+      # Add grid elements specific to the torso
+      grid.newpage()
+
+      draw_circle <- function(x, y, radius, gp = gpar()) {
+  grid.circle(x = x, y = y, r = radius, gp = gp)
+}
+draw_vertical_rectangle <- function(x, y, width, height, gp = gpar()) {
+  grid.rect(x = x - width / 2, y = y - height / 2, width = width, height = height, gp = gp)
+}
+draw_vertical_rectangle(x = 0.45, y = 0.95, width = 0.4, height = 0.6, gp = body_gp) # this is body
+draw_vertical_rectangle(x = 0.25, y = 0.35, width = 0.2, height = 0.4, gp = legs_gp) # this is left leg
+draw_vertical_rectangle(x = 0.45, y = 0.35, width = 0.2, height = 0.4, gp = legs_gp) # this is right leg
+
+
+colors <- colorRampPalette(c("red", "yellow","green"))(1000)
+num_circles <- length(colors)
+
+# CIRCLE
+circle_radius <- 0.1
+x_center <- 0.80
+y_center <- 0.75
+
+# GRADIETN FOR CIRCLE
+for (i in 1:num_circles) { 
+  color <- colors[i]
+  angle <- seq(0, pi, length.out = num_circles + 1)[i]
+  x <- x_center + circle_radius * cos(angle) 
+  y <- y_center + circle_radius * sin(angle) 
+  grid.circle(x = x, y = y, r = 50 / num_circles, gp = gpar(fill = color, col = color))
+}
+# LINES for APR Code
+
+  # 2
+grid.lines(x = c(0.75, .8), y = c(0.85, .7), 
+           gp = gpar(col = "black", lwd = 3))
+
+grid.text("APR Severity Level", x= 0.8, y = 0.95, just = "centre")
+draw_bed()
+    } else if (input$bodyPart == "Chest") {
+      # Add grid elements specific to the chest
+      grid.newpage()
+draw_circle <- function(x, y, radius, gp = gpar()) {
+  grid.circle(x = x, y = y, r = radius, gp = gp)
+}
+draw_vertical_rectangle <- function(x, y, width, height, gp = gpar()) {
+  grid.rect(x = x - width / 2, y = y - height / 2, width = width, height = height, gp = gp)
+}
+draw_vertical_rectangle(x = 0.4, y = 0.55, width = 0.3, height = 0.6, gp = body_gp) # this is body
+draw_vertical_rectangle(x = 0.10, y = 0.55, width = 0.05, height = 0.4, gp = arms_gp) # this is left arm
+draw_vertical_rectangle(x = 0.45, y = 0.55, width = 0.05, height = 0.4, gp = arms_gp) # this is right arm
+
+
+colors <- colorRampPalette(c("red", "yellow","green"))(1000)
+num_circles <- length(colors)
+
+# CIRCLE
+circle_radius <- 0.1
+x_center <- 0.80
+y_center <- 0.75
+
+# GRADIENT FOR CIRCLE
+for (i in 1:num_circles) { 
+  color <- colors[i]
+  angle <- seq(0, pi, length.out = num_circles + 1)[i]
+  x <- x_center + circle_radius * cos(angle) 
+  y <- y_center + circle_radius * sin(angle) 
+  grid.circle(x = x, y = y, r = 50 / num_circles, gp = gpar(fill = color, col = color))
+}
+# LINES for APR Code
+#3
+grid.lines(x = c(0.8, .85), y = c(0.7, .85), 
+           gp = gpar(col = "black", lwd = 3))
+
+grid.text("APR Severity Level", x= 0.8, y = 0.95, just = "centre")
+draw_bed()
+    }
+  }
+  
+  input <- data.frame(time  = "2021",
+                  bodyPart= "Head"
+                  )
+
+    drawYourPlot()
+
+```
+
+```{=tex}
+\begin{center}
+Figure 12: 2021 Dropdown of Head with HBED Data
+\end{center}
+```
+Transitioning to Figure 12, now shown as the 2021 Dropdown of Head with HBED Data, we see a significant change. The APR Severity Level remains a key feature, but the average daily charge has substantially increased to \$19,131.32. This stark increase could reflect several factors, such as advancements in medical technology, inflation, or changes in the healthcare market.
+
+Both dropdowns indicate that, while severity may not have dramatically changed, the economic impact on patients undergoing head-related procedures has notably increased. Moreover, similar dropdowns for the torso and chest are available, allowing users to explore and compare procedural frequencies, severities, and costs across different body regions over time, providing a comprehensive economic overview of medical treatments in the HBED system.
+
 # Conclusion
+
+This project, through its meticulous analysis and innovative visualization techniques, has laid bare the complex tapestry of healthcare in New York City, revealing significant disparities along racial and geographic lines. The data-driven insights underscore an urgent need for targeted policy interventions to address these inequities.
+
+As seen in our first two plots regarding the visualizations on the severity of illness, it becomes heavily omnipresent that there is an association with race and location. This adds to the discussion that there may be certain areas in the state of New York that may gain access to healthcare for more minor cases, as well as certain races and ethnicity that may not be receiving an adequate amount of care.
+
+We then worked on uncovering the disparities that exist among in the charges and costs through our linear regression model, barplots for pregnant women and our facet density plots on age. This revealed that on multiple identifying factors and fronts that there is a striking disparity that is observed on the basis of costs and charges. This inequality reveals a deep-rooted issue of economic inequality that affects multiple individuals who are vulnerable in New York that requires a more sophisticated analysis of what can be done to ensure that costs reflect a more whole and fair system.
+
+Then we presented visualizations that revealed stark contrasts in healthcare payment behaviors among different racial groups and across New York City boroughs. For instance, the pie chart in Plot 7 highlighted distinct payment behaviors by race, forming the basis for a more localized investigation. The heatmap of Plot 8 accentuated these disparities, particularly in Medicaid distribution between boroughs like Kings (Brooklyn) and Manhattan. Similarly, Plot 9 offered a geographical perspective, further emphasizing the concentration of Medicaid recipients and the racial disparities in healthcare access.
+
+Our project's data-driven insights reveal that individuals from minority populations often encounter significant barriers in accessing quality healthcare. This is not just a matter of economics but also of systemic biases and historical neglect. For instance, our analysis using pie charts and heatmaps clearly demonstrates how Medicaid distribution and healthcare services are unevenly spread across New York City and Western New York, or when specifically looking into New York City there is some evidence favoring some boroughs over others. This uneven distribution often leaves minority populations in urban areas with limited access to essential healthcare services, compared to their white counterparts.
+
+In conclusion, our project not only provides a detailed snapshot of New York's healthcare system but also serves as a call to action. It highlights the need for ongoing research, innovative data visualization tools, and policy reforms aimed at addressing healthcare disparities. By leveraging the power of data, we can pave the way for a more equitable and efficient healthcare system that caters to the needs of all New Yorkers, setting a precedent for healthcare systems globally.
+
+\newpage
+
+# Resources
+
+2013 Dataset:
+
+[https://www.health.ny.gov/statistics/vital_statistics/2013/](https://www.health.ny.gov/statistics/vital_statistics/2013/https://www.health.ny.gov/statistics/vital_statistics/2021/)
+
+2021 Dataset:
+
+[https://www.health.ny.gov/statistics/vital_statistics/2021/](https://www.health.ny.gov/statistics/vital_statistics/2013/https://www.health.ny.gov/statistics/vital_statistics/2021/)
